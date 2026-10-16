@@ -26,7 +26,7 @@ export function RiverGame({ onDone }: MiniGameProps) {
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       {node}
-      <Hint icon="🛟" text={done ? "Todos os patinhos estão com a mamãe!" : selected === null ? "Toque em um patinho para chamar o resgate!" : "Agora toque no helicóptero para resgatar!"} />
+      <Hint icon="🛟" text={done ? "Todos os patinhos estão com a mamãe!" : selected === null ? "Toque em um patinho para chamar o resgate!" : "Agora toque no avião para resgatar!"} />
       <div className="card-game flex min-h-0 flex-1 flex-col gap-3 p-3" style={{ background: "linear-gradient(var(--sky), var(--water))" }}>
         <div role="status" className="shrink-0 text-center font-display text-xl font-bold">🦆 Patinhos salvos: {rescued.length}/{DUCKS.length}</div>
         <div className="grid min-h-0 flex-1 grid-cols-3 gap-2">
@@ -36,7 +36,7 @@ export function RiverGame({ onDone }: MiniGameProps) {
             </button>
           ))}
         </div>
-        <button onClick={rescue} disabled={selected === null} className="btn-game shrink-0 px-3 py-3 text-2xl disabled:opacity-60" style={{ ["--btn" as string]: "var(--turquoise)" }} aria-label="Resgatar patinho">🚁 Resgatar</button>
+        <button onClick={rescue} disabled={selected === null} className="btn-game shrink-0 px-3 py-3 text-2xl disabled:opacity-60" style={{ ["--btn" as string]: "var(--turquoise)" }} aria-label="Resgatar patinho">✈️ Resgatar</button>
       </div>
     </div>
   );

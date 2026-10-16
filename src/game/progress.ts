@@ -54,3 +54,10 @@ export function loadProgress(): Progress {
 export function saveProgress(p: Progress) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); } catch { /* ignore */ }
 }
+
+/** Reset only this game's scores and medals, keeping sound and voice preferences. */
+export function resetProgress(sound = true): Progress {
+  const fresh = { ...emptyProgress(), sound };
+  saveProgress(fresh);
+  return fresh;
+}

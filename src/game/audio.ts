@@ -1,10 +1,13 @@
-// Áudio sintetizado (sem arquivos protegidos). Troque por arquivos em /public/audio no futuro.
+import { chooseNarrationVoice, isPortugueseVoice, narrationText, VOICE_STORAGE_KEY } from "./narration";
+
+// Efeitos sintetizados e narração com as vozes disponíveis no aparelho.
 type Sfx = "tap" | "good" | "oops" | "win" | "siren" | "splash" | "pop" | "star";
 
 class GameAudio {
   enabled = true;
   private ctx: AudioContext | null = null;
   private music: ReturnType<typeof setInterval> | null = null;
+  private waitingForVoice: (() => void) | null = null;
 
   private ac() {
     if (typeof window === "undefined") return null;
@@ -57,16 +60,59 @@ class GameAudio {
     }, 340);
   }
   stopMusic() { if (this.music) clearInterval(this.music); this.music = null; }
+  getVoices() {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
+    return window.speechSynthesis.getVoices().filter(isPortugueseVoice);
+  }
+  getPreferredVoice() {
+    try { return localStorage.getItem(VOICE_STORAGE_KEY) ?? ""; } catch { return ""; }
+  }
+  setPreferredVoice(uri: string) {
+    this.stopSpeaking();
+    try { if (uri) localStorage.setItem(VOICE_STORAGE_KEY, uri); else localStorage.removeItem(VOICE_STORAGE_KEY); } catch { /* Optional preference. */ }
+  }
+  stopSpeaking() {
+    this.waitingForVoice?.();
+    this.waitingForVoice = null;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  }
   speak(text: string) {
     if (!this.enabled || typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "pt-BR"; u.pitch = 1.4; u.rate = 1;
-    window.speechSynthesis.speak(u);
+    const clean = narrationText(text);
+    if (!clean) return;
+    this.stopSpeaking();
+    const synth = window.speechSynthesis;
+    let started = false;
+    let fallback: ReturnType<typeof setTimeout> | null = null;
+    const cleanup = () => {
+      started = true;
+      if (fallback !== null) clearTimeout(fallback);
+      synth.removeEventListener?.("voiceschanged", voicesChanged);
+      this.waitingForVoice = null;
+    };
+    const speakNow = () => {
+      if (started || !this.enabled) return;
+      started = true;
+      cleanup();
+      const voice = chooseNarrationVoice(synth.getVoices(), this.getPreferredVoice());
+      const utterance = new SpeechSynthesisUtterance(clean);
+      utterance.lang = voice?.lang || "pt-BR";
+      if (voice) utterance.voice = voice;
+      // A gentle pitch avoids the old high-pitched robotic effect.
+      utterance.pitch = 1.08;
+      utterance.rate = 0.95;
+      utterance.volume = 1;
+      synth.speak(utterance);
+    };
+    const voicesChanged = () => { if (synth.getVoices().length > 0) speakNow(); };
+    if (synth.getVoices().length > 0) { speakNow(); return; }
+    synth.addEventListener?.("voiceschanged", voicesChanged);
+    fallback = setTimeout(speakNow, 500);
+    this.waitingForVoice = cleanup;
   }
   setEnabled(on: boolean) {
     this.enabled = on;
-    if (!on) { this.stopMusic(); if (typeof window !== "undefined") window.speechSynthesis?.cancel(); }
+    if (!on) { this.stopMusic(); this.stopSpeaking(); }
   }
 }
 export const audio = new GameAudio();

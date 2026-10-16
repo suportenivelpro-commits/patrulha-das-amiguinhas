@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyResult, emptyProgress, isChapterUnlocked, isUnlocked, loadProgress, saveProgress, starsFor } from "@/game/progress";
+import { applyResult, emptyProgress, isChapterUnlocked, isUnlocked, loadProgress, resetProgress, saveProgress, starsFor } from "@/game/progress";
 import { CHAPTERS, MISSIONS } from "@/game/data";
 
 describe("progresso", () => {
@@ -51,5 +51,22 @@ describe("novos capítulos", () => {
     const result = applyResult(p, "memoria", 3);
     expect(result.earned).toContain("cap2");
     expect(result.next.stars.gatinho).toBe(2);
+  });
+});
+
+
+describe("reinício do jogo", () => {
+  it("zera estrelas e medalhas, preservando som, voz e outros dados do aparelho", () => {
+    const p = applyResult(emptyProgress(), "gatinho", 3).next;
+    saveProgress({ ...p, sound: false });
+    localStorage.setItem("patrulha-voz-v1", "voz-feminina");
+    localStorage.setItem("outro-app", "preservado");
+    const fresh = resetProgress(false);
+    expect(fresh).toEqual({ stars: {}, medals: [], sound: false });
+    expect(loadProgress()).toEqual(fresh);
+    expect(isUnlocked(fresh, 2)).toBe(false);
+    expect(isChapterUnlocked(fresh, 1)).toBe(false);
+    expect(localStorage.getItem("patrulha-voz-v1")).toBe("voz-feminina");
+    expect(localStorage.getItem("outro-app")).toBe("preservado");
   });
 });

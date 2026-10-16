@@ -22,13 +22,13 @@ describe("aventuras na natureza", () => {
     act(() => { vi.advanceTimersByTime(5000); });
     expect(onDone).toHaveBeenCalledExactlyOnceWith(0);
   });
-  it("resgata cada patinho somente depois de selecionar e chamar o helicóptero", () => {
+  it("resgata cada patinho somente depois de selecionar e chamar o avião", () => {
     const onDone = vi.fn();
     render(<RiverGame hero={HEROES[1]!} onDone={onDone} />);
-    const helicopter = screen.getByRole("button", { name: "Resgatar patinho" });
-    expect(helicopter).toBeDisabled();
+    const airplane = screen.getByRole("button", { name: "Resgatar patinho" });
+    expect(airplane).toBeDisabled();
     for (const duck of screen.getAllByRole("button", { name: /^Patinho/ })) {
-      fireEvent.click(duck); fireEvent.click(helicopter); fireEvent.click(helicopter);
+      fireEvent.click(duck); fireEvent.click(airplane); fireEvent.click(airplane);
       expect(duck).toBeDisabled();
     }
     expect(screen.getByRole("status")).toHaveTextContent("6/6");

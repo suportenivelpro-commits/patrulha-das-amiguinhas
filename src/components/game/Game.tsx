@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { HEROES, MEDALS, MISSIONS, CHAPTERS, heroById, type Hero, type Mission } from "@/game/data";
-import { applyResult, emptyProgress, isChapterUnlocked, isUnlocked, loadProgress, saveProgress, starsFor, totalStars, type Progress } from "@/game/progress";
+import { applyResult, emptyProgress, isChapterUnlocked, isUnlocked, loadProgress, resetProgress, saveProgress, starsFor, totalStars, type Progress } from "@/game/progress";
 import { audio } from "@/game/audio";
 import { Cloud, Puppy, Stars, Vehicle } from "./art";
 import { Confetti } from "./common";
@@ -18,7 +18,7 @@ import type { MiniGameProps } from "./minigames/types";
 const GAMES: Record<Mission["game"], (p: MiniGameProps) => React.ReactElement> = { kitten: KittenGame, fire: FireGame, vet: VetGame, bridge: BridgeGame, park: ParkGame, garden: GardenGame, river: RiverGame, memory: MemoryGame };
 
 type Screen =
-  | { n: "title" } | { n: "hub" } | { n: "map" } | { n: "team" } | { n: "medals" }
+  | { n: "title" } | { n: "hub" } | { n: "map" } | { n: "team" } | { n: "medals" } | { n: "settings" } | { n: "reset" }
   | { n: "call"; m: Mission } | { n: "choose"; m: Mission } | { n: "launch"; m: Mission; h: Hero }
   | { n: "drive"; m: Mission; h: Hero } | { n: "play"; m: Mission; h: Hero }
   | { n: "win"; m: Mission; h: Hero; stars: number; earned: string[] };
@@ -44,9 +44,20 @@ export function Game() {
   };
   const toggleSound = () => { const on = !p.sound; audio.setEnabled(on); if (on) audio.startMusic(); update({ ...p, sound: on }); };
 
+  const restart = () => {
+    audio.stopSpeaking();
+    audio.stopMusic();
+    const fresh = resetProgress(p.sound);
+    setP(fresh);
+    setChapterIndex(0);
+    setS({ n: "hub" });
+    if (fresh.sound) audio.startMusic();
+    audio.speak("Tudo pronto! Vamos começar uma nova aventura!");
+  };
+
   const top = s.n !== "title" && (
     <div className="game-toolbar flex shrink-0 items-center justify-between gap-2 p-3">
-      <button onClick={() => go({ n: s.n === "hub" ? "title" : "hub" })} className="btn-game h-14 w-14 text-2xl" style={btn("var(--lilac)")} aria-label="Voltar">🏠</button>
+      <button onClick={() => go({ n: s.n === "hub" ? "title" : s.n === "reset" ? "settings" : "hub" })} className="btn-game h-14 w-14 text-2xl" style={btn("var(--lilac)")} aria-label="Voltar">🏠</button>
       <div className="card-game px-4 py-1 font-display text-2xl font-extrabold">⭐ {totalStars(p)}</div>
       <button onClick={toggleSound} className="btn-game h-14 w-14 text-2xl" style={btn("var(--turquoise)")} aria-label="Som">{p.sound ? "🔊" : "🔇"}</button>
     </div>
@@ -79,8 +90,26 @@ export function Game() {
             <button onClick={() => go({ n: "team" })} className="btn-game py-6 text-2xl" style={btn("var(--turquoise)")}>🐾<br />Equipe</button>
             <button onClick={() => go({ n: "medals" })} className="btn-game py-6 text-2xl" style={btn("var(--lilac)")}>🏅<br />Medalhas</button>
             <button onClick={surprise} className="btn-game py-6 text-2xl" style={btn("var(--coral)")}>🎲<br />Surpresa</button>
+            <button onClick={() => go({ n: "settings" })} className="btn-game col-span-2 px-4 py-4 text-2xl" style={btn("var(--mint)")}>⚙️ Voz e ajustes</button>
           </div>
         </div>
+      );
+      break;
+    case "settings":
+      body = <Settings progress={p} onReset={() => go({ n: "reset" })} />;
+      break;
+    case "reset":
+      body = (
+        <Centered>
+          <h2 className="text-center font-display text-3xl font-extrabold">Começar tudo de novo?</h2>
+          <div className="card-game max-w-lg p-5 text-center text-xl">
+            <div className="mb-3 text-5xl" aria-hidden="true">⭐ 🏅</div>
+            <p>Isso apaga as estrelas e medalhas deste aparelho e volta as missões ao começo.</p>
+            <p className="mt-3 text-lg">A voz escolhida e a opção de som serão mantidas.</p>
+          </div>
+          <button onClick={restart} className="btn-game px-6 py-4 text-2xl" style={btn("var(--coral)")}>Sim, zerar progresso</button>
+          <button onClick={() => go({ n: "settings" })} className="btn-game px-6 py-4 text-2xl" style={btn("var(--turquoise)")}>Cancelar</button>
+        </Centered>
       );
       break;
     case "map": {
@@ -249,6 +278,42 @@ function Launch({ h, onDone }: { h: Hero; onDone: () => void }) {
       <div className="relative h-56 w-full max-w-lg overflow-hidden rounded-t-[4rem] border-8 border-card" style={{ background: h.color }}>
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2"><div className="animate-drive-out"><Vehicle hero={h} size={180} /></div></div>
         <div className="animate-door absolute inset-0" style={{ background: "repeating-linear-gradient(180deg, oklch(0.95 0.02 300) 0 22px, oklch(0.88 0.04 300) 22px 26px)" }} />
+      </div>
+    </Centered>
+  );
+}
+
+
+function Settings({ progress, onReset }: { progress: Progress; onReset: () => void }) {
+  const [voices, setVoices] = useState(() => audio.getVoices());
+  const [selected, setSelected] = useState(() => audio.getPreferredVoice());
+  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
+  useEffect(() => {
+    if (!supported) return;
+    const refresh = () => setVoices(audio.getVoices());
+    refresh();
+    window.speechSynthesis.addEventListener?.("voiceschanged", refresh);
+    return () => window.speechSynthesis.removeEventListener?.("voiceschanged", refresh);
+  }, [supported]);
+  return (
+    <Centered>
+      <h2 className="text-center font-display text-3xl font-extrabold">Voz e ajustes</h2>
+      <div className="card-game flex w-full max-w-lg flex-col gap-4 p-4">
+        <label htmlFor="narration-voice" className="font-display text-2xl font-bold">🎙️ Voz das aventuras</label>
+        <select id="narration-voice" disabled={!supported} value={selected} onChange={(event) => { const uri = event.target.value; setSelected(uri); audio.setPreferredVoice(uri); }} className="min-h-14 w-full rounded-2xl border-2 border-border bg-card px-3 text-lg">
+          <option value="">Automático — priorizar voz feminina</option>
+          {voices.map((voice) => <option key={voice.voiceURI} value={voice.voiceURI}>{voice.name} ({voice.lang})</option>)}
+        </select>
+        <p className="text-lg">O modo automático prioriza vozes femininas em português. Você também pode escolher e ouvir a que preferir.</p>
+        {!supported && <p className="text-lg">Este navegador não oferece narração por voz.</p>}
+        {supported && voices.length === 0 && <p className="text-lg">A lista depende das vozes de português instaladas no aparelho. Enquanto carrega, usamos a voz padrão disponível.</p>}
+        <button disabled={!supported || !progress.sound} onClick={() => audio.speak("Olá, amiguinha! Que alegria ter você aqui! Vamos ajudar os bichinhos e viver uma aventura juntas?")} className="btn-game px-4 py-3 text-xl disabled:opacity-50" style={btn("var(--turquoise)")}>🔊 Ouvir esta voz</button>
+        {!progress.sound && <p className="text-lg">Ative o som no botão do alto para ouvir o teste.</p>}
+      </div>
+      <div className="card-game flex w-full max-w-lg flex-col items-center gap-4 p-4 text-center">
+        <h3 className="font-display text-2xl font-bold">Progresso deste aparelho</h3>
+        <p className="text-xl">⭐ {totalStars(progress)} estrelas · 🏅 {progress.medals.length} medalhas</p>
+        <button onClick={onReset} className="btn-game px-4 py-3 text-xl" style={btn("var(--coral)")}>🔄 Zerar jogos e pontuações</button>
       </div>
     </Centered>
   );

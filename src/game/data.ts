@@ -1,5 +1,6 @@
 // Conteúdo do jogo: adicione personagens, missões, medalhas e capítulos aqui.
 export type HeroId = "luna" | "mel" | "bella" | "lili" | "nina";
+export type VehicleKind = "patrol" | "airplane" | "firetruck" | "ambulance" | "bulldozer";
 export type GameKind = "kitten" | "fire" | "vet" | "bridge" | "park" | "garden" | "river" | "memory";
 
 export interface Hero {
@@ -9,6 +10,7 @@ export interface Hero {
   personality: string;
   skill: string;
   vehicle: string;
+  vehicleKind: VehicleKind;
   vehicleIcon: string;
   badge: string;
   color: string; // uniforme
@@ -18,11 +20,11 @@ export interface Hero {
 }
 
 export const HEROES: Hero[] = [
-  { id: "luna", name: "Luna", role: "Líder", personality: "Corajosa e gentil", skill: "Organiza a equipe", vehicle: "Carro Estrela", vehicleIcon: "⭐", badge: "⭐", color: "var(--lilac)", fur: "#f4dcb6", ear: "#c48a55", intro: "Oi! Eu sou a Luna, a líder da patrulha!" },
-  { id: "mel", name: "Mel", role: "Pilota", personality: "Alegre e curiosa", skill: "Voa bem alto", vehicle: "Heli-Brisa", vehicleIcon: "🚁", badge: "☁️", color: "var(--turquoise)", fur: "#eab57d", ear: "#9c6034", intro: "Oi! Eu sou a Mel e adoro voar nas nuvens!" },
-  { id: "bella", name: "Bella", role: "Bombeira", personality: "Valente e animada", skill: "Jato de água", vehicle: "Caminhão Bolha", vehicleIcon: "💧", badge: "💧", color: "var(--coral)", fur: "#d8cfe0", ear: "#8a7b98", intro: "Oi! Eu sou a Bella, a bombeira das bolhas!" },
-  { id: "lili", name: "Lili", role: "Veterinária", personality: "Carinhosa e calma", skill: "Cuida de bichinhos", vehicle: "Ambulância Coração", vehicleIcon: "💗", badge: "💗", color: "var(--mint)", fur: "#dba78c", ear: "#7f5038", intro: "Oi! Eu sou a Lili e cuido de todos os bichinhos!" },
-  { id: "nina", name: "Nina", role: "Construtora", personality: "Esperta e criativa", skill: "Conserta tudo", vehicle: "Trator Faísca", vehicleIcon: "🔧", badge: "🔧", color: "var(--sun)", fur: "#f8ead6", ear: "#e08a48", intro: "Oi! Eu sou a Nina e conserto qualquer coisa!" },
+  { id: "luna", name: "Luna", role: "Líder", personality: "Corajosa e gentil", skill: "Organiza a equipe", vehicle: "Carro Estrela", vehicleKind: "patrol", vehicleIcon: "⭐", badge: "⭐", color: "var(--lilac)", fur: "#f4dcb6", ear: "#c48a55", intro: "Oi! Eu sou a Luna, a líder da patrulha!" },
+  { id: "mel", name: "Mel", role: "Pilota", personality: "Alegre e curiosa", skill: "Voa bem alto", vehicle: "Avião Brisa", vehicleKind: "airplane", vehicleIcon: "✈️", badge: "☁️", color: "var(--turquoise)", fur: "#eab57d", ear: "#9c6034", intro: "Oi! Eu sou a Mel e adoro voar nas nuvens!" },
+  { id: "bella", name: "Bella", role: "Bombeira", personality: "Valente e animada", skill: "Jato de água", vehicle: "Caminhão de Bombeiros Bolha", vehicleKind: "firetruck", vehicleIcon: "💧", badge: "💧", color: "var(--coral)", fur: "#d8cfe0", ear: "#8a7b98", intro: "Oi! Eu sou a Bella, a bombeira das bolhas!" },
+  { id: "lili", name: "Lili", role: "Veterinária", personality: "Carinhosa e calma", skill: "Cuida de bichinhos", vehicle: "Ambulância Coração", vehicleKind: "ambulance", vehicleIcon: "💗", badge: "💗", color: "var(--mint)", fur: "#dba78c", ear: "#7f5038", intro: "Oi! Eu sou a Lili e cuido de todos os bichinhos!" },
+  { id: "nina", name: "Nina", role: "Construtora", personality: "Esperta e criativa", skill: "Conserta tudo", vehicle: "Trator Faísca", vehicleKind: "bulldozer", vehicleIcon: "🔧", badge: "🔧", color: "var(--sun)", fur: "#f8ead6", ear: "#e08a48", intro: "Oi! Eu sou a Nina e conserto qualquer coisa!" },
 ];
 export const heroById = (id: HeroId) => HEROES.find((h) => h.id === id)!;
 
@@ -46,7 +48,7 @@ export const MISSIONS: Mission[] = [
   { id: "ponte", title: "Ponte Quebrada", place: "Rio Cristal", icon: "🌉", caller: "🦆", call: "Quá quá! A ponte quebrou e ninguém consegue passar!", hero: "nina", game: "bridge", x: 48, y: 76 },
   { id: "parque", title: "Parque Bagunçado", place: "Parque Arco-Íris", icon: "🎠", caller: "🧒", call: "O vento bagunçou o parque todinho! Vamos arrumar?", hero: "luna", game: "park", x: 16, y: 70 },
   { id: "jardim", title: "Jardim com Sede", place: "Jardim das Borboletas", icon: "🌷", caller: "🦋", call: "As flores estão com sede! Vamos regar cada plantinha para o jardim voltar a florescer?", hero: "bella", game: "garden", x: 24, y: 28 },
-  { id: "patinhos", title: "Patinhos no Rio", place: "Lagoa dos Patinhos", icon: "🦆", caller: "🦆", call: "Meus patinhos ficaram na água! Leve um de cada vez para o helicóptero de resgate!", hero: "mel", game: "river", x: 76, y: 46 },
+  { id: "patinhos", title: "Patinhos no Rio", place: "Lagoa dos Patinhos", icon: "🦆", caller: "🦆", call: "Meus patinhos ficaram na água! Leve um de cada vez para o avião de resgate!", hero: "mel", game: "river", x: 76, y: 46 },
   { id: "memoria", title: "Encontro dos Bichinhos", place: "Bosque dos Amigos", icon: "🐾", caller: "🦊", call: "Os bichinhos querem encontrar seus pares! Quem consegue lembrar onde cada amigo está?", hero: "luna", game: "memory", x: 34, y: 76 },
 ];
 

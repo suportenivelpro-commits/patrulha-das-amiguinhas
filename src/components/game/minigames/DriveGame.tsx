@@ -8,6 +8,7 @@ interface Obj { id: number; lane: number; y: number; kind: "cone" | "star" }
 
 /** Fase curta de direção: sem derrota, só desvia e coleta estrelinhas. */
 export function DriveGame({ hero, onDone }: { hero: Hero; onDone: () => void }) {
+  const flying = hero.vehicleKind === "airplane";
   const [lane, setLane] = useState(1);
   const [objs, setObjs] = useState<Obj[]>([]);
   const [progress, setProgress] = useState(0);
@@ -45,12 +46,12 @@ export function DriveGame({ hero, onDone }: { hero: Hero; onDone: () => void }) 
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <Hint icon="🚗" text="Desvie dos cones e pegue as estrelinhas!" />
-      <div className="card-game relative flex-1 overflow-hidden" style={{ background: "var(--grass)" }}>
-        <div className="absolute inset-y-0 left-[15%] right-[15%] overflow-hidden" style={{ background: "oklch(0.6 0.03 300)" }}>
+      <Hint icon={flying ? "✈️" : "🚗"} text={flying ? "Voe entre as nuvens de chuva e pegue as estrelinhas!" : "Desvie dos cones e pegue as estrelinhas!"} />
+      <div className="card-game relative flex-1 overflow-hidden" style={{ background: flying ? "var(--sky)" : "var(--grass)" }}>
+        <div className="absolute inset-y-0 left-[15%] right-[15%] overflow-hidden" style={{ background: flying ? "linear-gradient(var(--sky), #c5efff)" : "oklch(0.6 0.03 300)" }}>
           {[1, 2].map((l) => <div key={l} className="absolute inset-y-0 w-2" style={{ left: `${(l * 100) / 3}%`, background: `repeating-linear-gradient(180deg, #fff 0 30px, transparent 30px 60px)`, backgroundPositionY: `${progress * 30}px` }} />)}
           {objs.map((o) => (
-            <div key={o.id} className="absolute -translate-x-1/2 text-5xl" style={{ left: `${(o.lane + 0.5) * (100 / 3)}%`, top: `${o.y}%` }}>{o.kind === "cone" ? "🚧" : "⭐"}</div>
+            <div key={o.id} className="absolute -translate-x-1/2 text-5xl" style={{ left: `${(o.lane + 0.5) * (100 / 3)}%`, top: `${o.y}%` }}>{o.kind === "cone" ? flying ? "🌧️" : "🚧" : "⭐"}</div>
           ))}
           <div key={bump} className={`absolute bottom-[8%] -translate-x-1/2 transition-[left] duration-200 ${bump ? "animate-wiggle" : ""}`} style={{ left: `${(lane + 0.5) * (100 / 3)}%` }}>
             <div className="-rotate-90"><Vehicle hero={hero} size={110} /></div>
