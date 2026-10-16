@@ -1,0 +1,149 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: "Baloo 2", "Fredoka", system-ui, sans-serif;
+  --font-sans: "Fredoka", system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-rose: var(--rose);
+  --color-lilac: var(--lilac);
+  --color-turquoise: var(--turquoise);
+  --color-sun: var(--sun);
+  --color-mint: var(--mint);
+  --color-coral: var(--coral);
+  --color-sky: var(--sky);
+  --color-grass: var(--grass);
+  --color-water: var(--water);
+  --color-plum: var(--plum);
+}
+
+:root {
+  --radius: 1.25rem;
+  --rose: oklch(0.76 0.15 355);
+  --lilac: oklch(0.74 0.13 300);
+  --turquoise: oklch(0.78 0.12 192);
+  --sun: oklch(0.88 0.16 88);
+  --mint: oklch(0.84 0.13 160);
+  --coral: oklch(0.73 0.16 32);
+  --sky: oklch(0.9 0.06 225);
+  --grass: oklch(0.84 0.15 138);
+  --water: oklch(0.75 0.12 230);
+  --plum: oklch(0.35 0.1 310);
+
+  --background: oklch(0.97 0.025 320);
+  --foreground: var(--plum);
+  --card: oklch(0.995 0.008 320);
+  --card-foreground: var(--plum);
+  --popover: oklch(0.995 0.008 320);
+  --popover-foreground: var(--plum);
+  --primary: var(--rose);
+  --primary-foreground: oklch(0.99 0.01 320);
+  --secondary: var(--lilac);
+  --secondary-foreground: oklch(0.99 0.01 320);
+  --muted: oklch(0.93 0.03 310);
+  --muted-foreground: oklch(0.5 0.07 310);
+  --accent: var(--turquoise);
+  --accent-foreground: var(--plum);
+  --destructive: var(--coral);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.88 0.05 310);
+  --input: oklch(0.88 0.05 310);
+  --ring: var(--lilac);
+
+  --gradient-sky: linear-gradient(180deg, oklch(0.88 0.08 225) 0%, oklch(0.93 0.06 330) 60%, oklch(0.96 0.05 80) 100%);
+  --gradient-title: linear-gradient(160deg, oklch(0.82 0.12 330), oklch(0.8 0.12 290) 45%, oklch(0.84 0.11 200));
+  --shadow-soft: 0 10px 30px -10px oklch(0.35 0.1 310 / 0.35);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { overscroll-behavior: none; }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  h1, h2, h3 { font-family: var(--font-display); }
+}
+
+@utility btn-game {
+  font-family: var(--font-display);
+  font-weight: 800;
+  border-radius: 9999px;
+  color: var(--primary-foreground);
+  background: var(--btn, var(--rose));
+  box-shadow: 0 7px 0 color-mix(in oklab, var(--btn, var(--rose)) 65%, var(--plum)), 0 14px 24px -8px oklch(0.35 0.1 310 / 0.4);
+  transition: transform 0.12s, box-shadow 0.12s;
+  text-shadow: 0 2px 0 oklch(0.35 0.1 310 / 0.25);
+  &:active { transform: translateY(5px); box-shadow: 0 2px 0 color-mix(in oklab, var(--btn, var(--rose)) 65%, var(--plum)); }
+}
+@utility card-game {
+  background: var(--card);
+  border-radius: 2rem;
+  border: 4px solid oklch(1 0 0 / 0.9);
+  box-shadow: var(--shadow-soft);
+}
+@utility bg-sky-grad { background: var(--gradient-sky); }
+@utility bg-title-grad { background: var(--gradient-title); }
+@utility text-outline {
+  -webkit-text-stroke: 2px var(--plum);
+  paint-order: stroke fill;
+}
+
+@keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-12px) } }
+@keyframes bob { 0%,100% { transform: translateY(0) rotate(-2deg) } 50% { transform: translateY(-6px) rotate(2deg) } }
+@keyframes pop { 0% { transform: scale(0.3); opacity: 0 } 70% { transform: scale(1.12); opacity: 1 } 100% { transform: scale(1) } }
+@keyframes wiggle { 0%,100% { transform: rotate(0) } 20% { transform: rotate(-10deg) } 40% { transform: rotate(10deg) } 60% { transform: rotate(-6deg) } 80% { transform: rotate(6deg) } }
+@keyframes pulse-big { 0%,100% { transform: scale(1) } 50% { transform: scale(1.07) } }
+@keyframes drift { from { transform: translateX(-20vw) } to { transform: translateX(120vw) } }
+@keyframes confetti { 0% { transform: translateY(-10vh) rotate(0) } 100% { transform: translateY(110vh) rotate(720deg) } }
+@keyframes flicker { 0%,100% { transform: scale(1, 1) } 50% { transform: scale(1.1, 0.92) } }
+@keyframes drive-out { 0% { transform: translateX(0) } 30% { transform: translateX(-20px) } 100% { transform: translateX(140vw) } }
+@keyframes ring { 0%,100% { transform: rotate(0) } 10%,30% { transform: rotate(-15deg) } 20%,40% { transform: rotate(15deg) } 50% { transform: rotate(0) } }
+@keyframes rise { 0% { transform: translateY(0); opacity: 1 } 100% { transform: translateY(-80px); opacity: 0 } }
+@keyframes dash { to { stroke-dashoffset: -40 } }
+@keyframes door { to { transform: translateY(-100%) } }
+@keyframes spin-slow { to { transform: rotate(360deg) } }
+
+@utility animate-float { animation: float 3s ease-in-out infinite; }
+@utility animate-bob { animation: bob 1.6s ease-in-out infinite; }
+@utility animate-pop { animation: pop 0.5s cubic-bezier(.3,1.6,.5,1) both; }
+@utility animate-wiggle { animation: wiggle 0.6s ease-in-out; }
+@utility animate-pulse-big { animation: pulse-big 1.4s ease-in-out infinite; }
+@utility animate-drift { animation: drift 40s linear infinite; }
+@utility animate-flicker { animation: flicker 0.5s ease-in-out infinite; transform-origin: bottom center; }
+@utility animate-drive-out { animation: drive-out 1.8s 0.9s ease-in both; }
+@utility animate-ring { animation: ring 1.2s ease-in-out infinite; }
+@utility animate-rise { animation: rise 1s ease-out forwards; }
+@utility animate-dash { animation: dash 0.4s linear infinite; }
+@utility animate-door { animation: door 0.9s ease-in-out forwards; }
+@utility animate-spin-slow { animation: spin-slow 12s linear infinite; }
