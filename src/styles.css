@@ -147,3 +147,19 @@
 @utility animate-dash { animation: dash 0.4s linear infinite; }
 @utility animate-door { animation: door 0.9s ease-in-out forwards; }
 @utility animate-spin-slow { animation: spin-slow 12s linear infinite; }
+
+/* Larger phone controls, with scrolling when the available height is short. */
+.game-app { min-height: 32rem; }
+.game-app .btn-game { min-height: 3rem; touch-action: manipulation; }
+.game-hint { min-height: 3.5rem; touch-action: manipulation; }
+.game-centered { justify-content: safe center; }
+.game-centered > * { flex-shrink: 0; }
+.game-toolbar { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+@media (max-width: 640px) {
+  html { font-size: 18px; }
+  .game-app .text-xs { font-size: 0.8rem; }
+  .game-app .text-sm { font-size: 0.95rem; }
+  .game-app .card-game:has(> .touch-none) { gap: 0.5rem; padding: 0.5rem; }
+  .game-app .card-game > .touch-none { min-width: 0; }
+  .game-app .card-game > .touch-none > div { max-width: 100%; }
+}

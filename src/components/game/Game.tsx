@@ -31,7 +31,7 @@ export function Game() {
   const toggleSound = () => { const on = !p.sound; audio.setEnabled(on); if (on) audio.startMusic(); update({ ...p, sound: on }); };
 
   const top = s.n !== "title" && (
-    <div className="flex items-center justify-between gap-2 p-3">
+    <div className="game-toolbar flex shrink-0 items-center justify-between gap-2 p-3">
       <button onClick={() => go({ n: s.n === "hub" ? "title" : "hub" })} className="btn-game h-14 w-14 text-2xl" style={btn("var(--lilac)")} aria-label="Voltar">🏠</button>
       <div className="card-game px-4 py-1 font-display text-2xl font-extrabold">⭐ {totalStars(p)}</div>
       <button onClick={toggleSound} className="btn-game h-14 w-14 text-2xl" style={btn("var(--turquoise)")} aria-label="Som">{p.sound ? "🔊" : "🔇"}</button>
@@ -42,14 +42,14 @@ export function Game() {
   switch (s.n) {
     case "title":
       body = (
-        <div className="relative flex h-full flex-col items-center justify-center gap-6 overflow-hidden bg-title-grad p-4 text-center">
+        <div className="game-centered relative flex min-h-0 flex-1 flex-col items-center gap-6 overflow-y-auto overflow-x-hidden bg-title-grad p-4 text-center">
           <Cloud className="animate-drift absolute top-[8%] w-40" />
           <Cloud className="animate-drift absolute top-[22%] w-28" style={{ animationDelay: "-18s" }} />
           <div className="absolute -top-40 h-96 w-96 animate-spin-slow rounded-full opacity-30" style={{ background: "repeating-conic-gradient(#fff 0 10deg, transparent 10deg 20deg)" }} />
           <h1 className="animate-pop relative font-display text-5xl font-extrabold leading-none text-primary-foreground text-outline sm:text-7xl">Patrulha das<br />Amiguinhas</h1>
           <p className="relative font-display text-xl font-bold text-primary-foreground text-outline sm:text-2xl">✨ Missões na Cidade ✨</p>
           <div className="relative flex flex-wrap justify-center">
-            {HEROES.map((h, i) => <div key={h.id} className="animate-bob" style={{ animationDelay: `${i * 0.2}s` }}><Puppy hero={h} size={88} /></div>)}
+            {HEROES.map((h, i) => <div key={h.id} className="animate-bob" style={{ animationDelay: `${i * 0.2}s` }}><Puppy hero={h} size={96} /></div>)}
           </div>
           <button onClick={() => { audio.startMusic(); audio.speak("Vamos jogar!"); go({ n: "hub" }); }} className="btn-game animate-pulse-big relative px-14 py-5 text-4xl" style={btn("var(--rose)")}>▶ Jogar</button>
         </div>
@@ -57,13 +57,13 @@ export function Game() {
       break;
     case "hub":
       body = (
-        <div className="flex flex-1 flex-col items-center justify-center gap-5 p-4">
+        <div className="game-centered flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto p-4">
           <h2 className="font-display text-4xl font-extrabold">Central de Missões</h2>
-          <div className="flex gap-1">{HEROES.map((h) => <Puppy key={h.id} hero={h} size={60} />)}</div>
-          <div className="grid w-full max-w-xl gap-4 sm:grid-cols-3">
+          <div className="flex flex-wrap justify-center gap-1">{HEROES.map((h) => <Puppy key={h.id} hero={h} size={72} />)}</div>
+          <div className="grid w-full max-w-xl grid-cols-2 gap-4 sm:grid-cols-3">
             <button onClick={() => go({ n: "map" })} className="btn-game py-6 text-2xl" style={btn("var(--rose)")}>🗺️<br />Mapa</button>
             <button onClick={() => go({ n: "team" })} className="btn-game py-6 text-2xl" style={btn("var(--turquoise)")}>🐾<br />Equipe</button>
-            <button onClick={() => go({ n: "medals" })} className="btn-game py-6 text-2xl" style={btn("var(--lilac)")}>🏅<br />Medalhas</button>
+            <button onClick={() => go({ n: "medals" })} className="btn-game col-span-2 py-6 text-2xl sm:col-span-1" style={btn("var(--lilac)")}>🏅<br />Medalhas</button>
           </div>
         </div>
       );
@@ -72,7 +72,7 @@ export function Game() {
       const ch = CHAPTERS[0];
       const doneCount = ch.missions.filter((id) => p.stars[id]).length;
       body = (
-        <div className="flex flex-1 flex-col gap-2 px-3 pb-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3">
           <div className="card-game flex items-center gap-3 px-4 py-2">
             <span className="text-2xl">📖</span>
             <div className="flex-1"><div className="font-display font-bold">Capítulo 1: {ch.title}</div>
@@ -105,11 +105,11 @@ export function Game() {
         <div className="grid flex-1 grid-cols-2 gap-4 overflow-auto p-4 sm:grid-cols-3 lg:grid-cols-5">
           {HEROES.map((h, i) => (
             <button key={h.id} onClick={() => { audio.sfx("pop"); audio.speak(h.intro); }} className="card-game animate-pop flex flex-col items-center p-3 transition-transform active:scale-95" style={{ animationDelay: `${i * 0.1}s`, background: `color-mix(in oklab, ${h.color} 30%, white)` }}>
-              <div className="animate-bob"><Puppy hero={h} size={100} /></div>
+              <div className="animate-bob"><Puppy hero={h} size={112} /></div>
               <div className="font-display text-2xl font-extrabold">{h.name}</div>
               <div className="font-bold">{h.badge} {h.role}</div>
               <div className="text-sm text-muted-foreground">{h.personality}</div>
-              <Vehicle hero={h} size={90} />
+              <Vehicle hero={h} size={104} />
               <div className="text-xs font-bold">{h.vehicle}</div>
             </button>
           ))}
@@ -120,7 +120,7 @@ export function Game() {
       body = (
         <div className="flex-1 overflow-auto p-4">
           <h2 className="mb-4 text-center font-display text-4xl font-extrabold">Minhas Medalhas</h2>
-          <div className="mx-auto grid max-w-3xl grid-cols-3 gap-4 sm:grid-cols-5">
+          <div className="mx-auto grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-5">
             {MEDALS.map((m) => { const has = p.medals.includes(m.id); return (
               <div key={m.id} className="card-game flex flex-col items-center p-3 text-center">
                 <div className={`flex h-20 w-20 items-center justify-center rounded-full border-4 border-card text-4xl shadow-md ${has ? "animate-pop" : "grayscale opacity-30"}`} style={{ background: m.color }}>{has ? m.icon : "❔"}</div>
@@ -148,11 +148,11 @@ export function Game() {
       body = <Launch h={s.h} onDone={() => setS({ n: "drive", m: s.m, h: s.h })} />;
       break;
     case "drive":
-      body = <div className="flex-1 px-3 pb-3"><DriveGame hero={s.h} onDone={() => setS({ n: "play", m: s.m, h: s.h })} /></div>;
+      body = <div className="min-h-0 flex-1 px-3 pb-3"><DriveGame hero={s.h} onDone={() => setS({ n: "play", m: s.m, h: s.h })} /></div>;
       break;
     case "play": {
       const G = GAMES[s.m.game];
-      body = <div className="flex-1 px-3 pb-3"><G hero={s.h} onDone={(mist) => { const stars = starsFor(mist); const r = applyResult(p, s.m.id, stars); update(r.next); audio.sfx("win"); audio.speak("Missão cumprida! Você conseguiu!"); setS({ n: "win", m: s.m, h: s.h, stars, earned: r.earned }); }} /></div>;
+      body = <div className="min-h-0 flex-1 px-3 pb-3"><G hero={s.h} onDone={(mist) => { const stars = starsFor(mist); const r = applyResult(p, s.m.id, stars); update(r.next); audio.sfx("win"); audio.speak("Missão cumprida! Você conseguiu!"); setS({ n: "win", m: s.m, h: s.h, stars, earned: r.earned }); }} /></div>;
       break;
     }
     case "win":
@@ -177,11 +177,11 @@ export function Game() {
       break;
   }
 
-  return <div className="flex h-dvh flex-col overflow-hidden bg-sky-grad">{top}{body}</div>;
+  return <div className="game-app flex h-dvh min-h-0 flex-col overflow-hidden bg-sky-grad">{top}{body}</div>;
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-1 flex-col items-center justify-center gap-5 overflow-auto p-4">{children}</div>;
+  return <div className="game-centered flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto p-4">{children}</div>;
 }
 function Speak({ text }: { text: string }) {
   useEffect(() => { const id = setTimeout(() => audio.speak(text), 300); return () => clearTimeout(id); }, [text]);
@@ -201,10 +201,10 @@ function Choose({ m, onPick }: { m: Mission; onPick: (h: Hero) => void }) {
     <Centered>
       <Speak text="Quem é a melhor heroína para essa missão?" />
       <h2 className="text-center font-display text-3xl font-extrabold">Quem vai ajudar? {m.icon}</h2>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {HEROES.map((h) => (
           <button key={`${h.id}${wrong === h.id ? tries : ""}`} onClick={() => pick(h)} className={`card-game flex flex-col items-center p-2 ${wrong === h.id ? "animate-wiggle" : ""} ${tries > 0 && h.id === m.hero ? "animate-pulse-big ring-8 ring-sun" : ""}`} style={{ background: `color-mix(in oklab, ${h.color} 30%, white)` }}>
-            <Puppy hero={h} size={84} mood={wrong === h.id ? "think" : "happy"} />
+            <Puppy hero={h} size={104} mood={wrong === h.id ? "think" : "happy"} />
             <span className="font-display text-xl font-bold">{h.name}</span><span className="text-2xl">{h.badge}</span>
           </button>
         ))}

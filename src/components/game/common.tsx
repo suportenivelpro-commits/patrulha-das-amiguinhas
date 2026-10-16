@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { audio } from "@/game/audio";
 import { cn } from "@/lib/utils";
 
@@ -12,15 +12,15 @@ export function useFeedback() {
     const id = setTimeout(() => setFb(null), 1300);
     return () => clearTimeout(id);
   }, [fb]);
-  const show = (k: "good" | "oops") => {
+  const show = useCallback((k: "good" | "oops") => {
     const list = k === "good" ? GOOD : OOPS;
     const t = list[Math.floor(Math.random() * list.length)];
     audio.sfx(k);
     audio.speak(t);
     setFb({ t, k, n: Date.now() });
-  };
+  }, []);
   const node = fb ? (
-    <div key={fb.n} className="pointer-events-none fixed left-1/2 top-24 z-[60] -translate-x-1/2">
+    <div key={fb.n} className="pointer-events-none fixed left-1/2 top-24 z-[60] w-max max-w-[calc(100vw-1rem)] -translate-x-1/2">
       <div className="animate-pop card-game px-6 py-3 font-display text-2xl font-extrabold sm:text-3xl" style={{ color: fb.k === "good" ? "var(--plum)" : "var(--muted-foreground)" }}>
         {fb.k === "good" ? "🎉 " : "🤗 "}{fb.t}
       </div>
@@ -32,9 +32,9 @@ export function useFeedback() {
 export function Hint({ icon, text }: { icon: string; text: string }) {
   useEffect(() => { const id = setTimeout(() => audio.speak(text), 300); return () => clearTimeout(id); }, [text]);
   return (
-    <button onClick={() => audio.speak(text)} className="card-game animate-pop mx-auto flex items-center gap-3 px-5 py-2 text-left" aria-label="Ouvir instrução">
+    <button onClick={() => audio.speak(text)} className="game-hint card-game animate-pop mx-auto flex max-w-full shrink-0 items-center gap-3 px-4 py-3 text-left" aria-label="Ouvir instrução">
       <span className="text-3xl">{icon}</span>
-      <span className="font-display text-lg font-bold leading-tight sm:text-2xl">{text}</span>
+      <span className="font-display text-xl font-bold leading-tight sm:text-2xl">{text}</span>
       <span className="text-xl">🔊</span>
     </button>
   );
