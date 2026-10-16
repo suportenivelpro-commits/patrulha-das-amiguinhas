@@ -41,7 +41,7 @@ export function Hint({ icon, text }: { icon: string; text: string }) {
 }
 
 /** Item arrastável por toque/mouse. Solta sobre elementos com data-drop. */
-export function Drag({ onDrop, onTap, children, className, disabled }: { onDrop: (target: string | null) => void; onTap?: () => void; children: ReactNode; className?: string; disabled?: boolean }) {
+export function Drag({ onDrop, onTap, children, className, disabled, label }: { onDrop: (target: string | null) => void; onTap?: () => void; children: ReactNode; className?: string; disabled?: boolean; label?: string }) {
   const [off, setOff] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const st = useRef<{ x: number; y: number; moved: boolean } | null>(null);
@@ -51,20 +51,27 @@ export function Drag({ onDrop, onTap, children, className, disabled }: { onDrop:
     st.current = null;
     setDragging(false);
     setOff({ x: 0, y: 0 });
-    if (!s || cancel) return;
+    if (!s || cancel || disabled) return;
     if (!s.moved) { onTap?.(); return; }
-    const t = document.elementsFromPoint(e.clientX, e.clientY).find((el) => el instanceof HTMLElement && el.dataset.drop && !ref.current?.contains(el)) as HTMLElement | undefined;
+    const under = document.elementsFromPoint?.(e.clientX, e.clientY) ?? [];
+    const t = under.find((el) => el instanceof HTMLElement && el.dataset.drop && !ref.current?.contains(el)) as HTMLElement | undefined;
     onDrop(t?.dataset.drop ?? null);
   };
   return (
     <div
       ref={ref}
+      role={onTap ? "button" : undefined}
+      tabIndex={onTap && !disabled ? 0 : undefined}
+      aria-label={label}
+      aria-disabled={disabled || undefined}
+      onKeyDown={(e) => { if (!disabled && onTap && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onTap(); } }}
       className={cn("touch-none select-none", disabled ? "opacity-40" : "cursor-grab", dragging ? "relative z-50" : "transition-transform duration-300", className)}
       style={{ transform: `translate(${off.x}px, ${off.y}px) scale(${dragging ? 1.2 : 1})` }}
-      onPointerDown={(e) => { if (disabled) return; e.currentTarget.setPointerCapture(e.pointerId); st.current = { x: e.clientX, y: e.clientY, moved: false }; setDragging(true); audio.sfx("tap"); }}
+      onPointerDown={(e) => { if (disabled || st.current) return; e.currentTarget.setPointerCapture?.(e.pointerId); st.current = { x: e.clientX, y: e.clientY, moved: false }; setDragging(true); audio.sfx("tap"); }}
       onPointerMove={(e) => { const s = st.current; if (!s) return; const dx = e.clientX - s.x, dy = e.clientY - s.y; if (Math.hypot(dx, dy) > 10) s.moved = true; setOff({ x: dx, y: dy }); }}
       onPointerUp={(e) => end(e)}
       onPointerCancel={(e) => end(e, true)}
+      onLostPointerCapture={(e) => end(e, true)}
     >
       {children}
     </div>

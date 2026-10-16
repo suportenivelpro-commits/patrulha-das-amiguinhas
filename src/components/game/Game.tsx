@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { HEROES, MEDALS, MISSIONS, CHAPTERS, heroById, type Hero, type Mission } from "@/game/data";
-import { applyResult, emptyProgress, isUnlocked, loadProgress, saveProgress, starsFor, totalStars, type Progress } from "@/game/progress";
+import { applyResult, emptyProgress, isChapterUnlocked, isUnlocked, loadProgress, saveProgress, starsFor, totalStars, type Progress } from "@/game/progress";
 import { audio } from "@/game/audio";
 import { Cloud, Puppy, Stars, Vehicle } from "./art";
 import { Confetti } from "./common";
@@ -10,9 +10,12 @@ import { VetGame } from "./minigames/VetGame";
 import { BridgeGame } from "./minigames/BridgeGame";
 import { ParkGame } from "./minigames/ParkGame";
 import { DriveGame } from "./minigames/DriveGame";
+import { GardenGame } from "./minigames/GardenGame";
+import { RiverGame } from "./minigames/RiverGame";
+import { MemoryGame } from "./minigames/MemoryGame";
 import type { MiniGameProps } from "./minigames/types";
 
-const GAMES: Record<Mission["game"], (p: MiniGameProps) => React.ReactElement> = { kitten: KittenGame, fire: FireGame, vet: VetGame, bridge: BridgeGame, park: ParkGame };
+const GAMES: Record<Mission["game"], (p: MiniGameProps) => React.ReactElement> = { kitten: KittenGame, fire: FireGame, vet: VetGame, bridge: BridgeGame, park: ParkGame, garden: GardenGame, river: RiverGame, memory: MemoryGame };
 
 type Screen =
   | { n: "title" } | { n: "hub" } | { n: "map" } | { n: "team" } | { n: "medals" }
@@ -25,9 +28,20 @@ const btn = (c: string) => ({ ["--btn" as string]: c });
 export function Game() {
   const [p, setP] = useState<Progress>(emptyProgress);
   const [s, setS] = useState<Screen>({ n: "title" });
+  const [chapterIndex, setChapterIndex] = useState(0);
   useEffect(() => { const l = loadProgress(); setP(l); audio.setEnabled(l.sound); }, []);
   const update = (np: Progress) => { setP(np); saveProgress(np); };
   const go = (n: Screen) => { audio.sfx("tap"); setS(n); };
+  const startMission = (mission: Mission) => {
+    const index = CHAPTERS.findIndex((chapter) => chapter.missions.includes(mission.id));
+    setChapterIndex(Math.max(0, index));
+    go({ n: "call", m: mission });
+  };
+  const surprise = () => {
+    const available = MISSIONS.filter((_, index) => isUnlocked(p, index));
+    const mission = available[Math.floor(Math.random() * available.length)];
+    if (mission) startMission(mission);
+  };
   const toggleSound = () => { const on = !p.sound; audio.setEnabled(on); if (on) audio.startMusic(); update({ ...p, sound: on }); };
 
   const top = s.n !== "title" && (
@@ -47,7 +61,7 @@ export function Game() {
           <Cloud className="animate-drift absolute top-[22%] w-28" style={{ animationDelay: "-18s" }} />
           <div className="absolute -top-40 h-96 w-96 animate-spin-slow rounded-full opacity-30" style={{ background: "repeating-conic-gradient(#fff 0 10deg, transparent 10deg 20deg)" }} />
           <h1 className="animate-pop relative font-display text-5xl font-extrabold leading-none text-primary-foreground text-outline sm:text-7xl">Patrulha das<br />Amiguinhas</h1>
-          <p className="relative font-display text-xl font-bold text-primary-foreground text-outline sm:text-2xl">✨ Missões na Cidade ✨</p>
+          <p className="relative font-display text-xl font-bold text-primary-foreground text-outline sm:text-2xl">✨ Aventuras na Cidade e na Natureza ✨</p>
           <div className="relative flex flex-wrap justify-center">
             {HEROES.map((h, i) => <div key={h.id} className="animate-bob" style={{ animationDelay: `${i * 0.2}s` }}><Puppy hero={h} size={96} /></div>)}
           </div>
@@ -60,22 +74,31 @@ export function Game() {
         <div className="game-centered flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto p-4">
           <h2 className="font-display text-4xl font-extrabold">Central de Missões</h2>
           <div className="flex flex-wrap justify-center gap-1">{HEROES.map((h) => <Puppy key={h.id} hero={h} size={72} />)}</div>
-          <div className="grid w-full max-w-xl grid-cols-2 gap-4 sm:grid-cols-3">
+          <div className="grid w-full max-w-xl grid-cols-2 gap-4">
             <button onClick={() => go({ n: "map" })} className="btn-game py-6 text-2xl" style={btn("var(--rose)")}>🗺️<br />Mapa</button>
             <button onClick={() => go({ n: "team" })} className="btn-game py-6 text-2xl" style={btn("var(--turquoise)")}>🐾<br />Equipe</button>
-            <button onClick={() => go({ n: "medals" })} className="btn-game col-span-2 py-6 text-2xl sm:col-span-1" style={btn("var(--lilac)")}>🏅<br />Medalhas</button>
+            <button onClick={() => go({ n: "medals" })} className="btn-game py-6 text-2xl" style={btn("var(--lilac)")}>🏅<br />Medalhas</button>
+            <button onClick={surprise} className="btn-game py-6 text-2xl" style={btn("var(--coral)")}>🎲<br />Surpresa</button>
           </div>
         </div>
       );
       break;
     case "map": {
-      const ch = CHAPTERS[0];
+      const ch = CHAPTERS[chapterIndex]!;
+      const chapterMissions = ch.missions.map((id) => MISSIONS.find((mission) => mission.id === id)!);
       const doneCount = ch.missions.filter((id) => p.stars[id]).length;
       body = (
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3">
-          <div className="card-game flex items-center gap-3 px-4 py-2">
+          <div className="grid shrink-0 grid-cols-2 gap-2" aria-label="Capítulos">
+            {CHAPTERS.map((chapter, index) => (
+              <button key={chapter.id} aria-pressed={chapterIndex === index} disabled={!isChapterUnlocked(p, index)} onClick={() => { audio.sfx("tap"); setChapterIndex(index); }} className={`card-game px-2 py-3 font-display text-lg font-bold disabled:opacity-50 ${chapterIndex === index ? "ring-4 ring-sun" : ""}`}>
+                {isChapterUnlocked(p, index) ? index === 0 ? "🏙️" : "🌿" : "🔒"} Capítulo {index + 1}
+              </button>
+            ))}
+          </div>
+          <div className="card-game flex shrink-0 items-center gap-3 px-4 py-2">
             <span className="text-2xl">📖</span>
-            <div className="flex-1"><div className="font-display font-bold">Capítulo 1: {ch.title}</div>
+            <div className="flex-1"><div className="font-display font-bold">Capítulo {chapterIndex + 1}: {ch.title}</div>
               <div className="h-3 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full transition-all" style={{ width: `${(doneCount / ch.missions.length) * 100}%`, background: "var(--rose)" }} /></div></div>
             <span className="font-display font-bold">{doneCount}/{ch.missions.length}</span>
           </div>
@@ -84,18 +107,19 @@ export function Game() {
               <path d="M0 88 Q30 80 50 90 T100 84 L100 100 L0 100Z" fill="var(--water)" />
               <path d="M22 30 Q50 45 76 26 M50 45 L80 70 M50 45 L48 76 M50 45 L16 70" stroke="#fff" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="1 3" vectorEffect="non-scaling-stroke" style={{ strokeWidth: 10 }} />
             </svg>
-            {["🏡", "🌷", "🏠", "🌳", "🏫", "🌼", "🏘️"].map((e, i) => <span key={i} className="absolute text-3xl" style={{ left: `${[8, 35, 60, 90, 35, 66, 88][i]}%`, top: `${[48, 22, 54, 45, 58, 84, 88][i]}%` }}>{e}</span>)}
-            <div className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 text-center"><div className="text-5xl">🏰</div><div className="rounded-full bg-card px-2 font-display text-sm font-bold">Base</div></div>
-            {MISSIONS.map((m, i) => {
-              const open = isUnlocked(p, i);
+            {(chapterIndex === 0 ? ["🏡", "🌷", "🏠", "🌳", "🏫", "🌼", "🏘️"] : ["🌲", "🌷", "🦋", "🌳", "🏕️", "🌼", "🌲"]).map((e, i) => <span key={i} className="absolute text-3xl" style={{ left: `${[8, 35, 60, 90, 35, 66, 88][i]}%`, top: `${[48, 22, 54, 45, 58, 84, 88][i]}%` }}>{e}</span>)}
+            <div className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 text-center"><div className="text-5xl">{chapterIndex === 0 ? "🏰" : "🏕️"}</div><div className="rounded-full bg-card px-2 font-display text-sm font-bold">Base</div></div>
+            {chapterMissions.map((m) => {
+              const open = isUnlocked(p, MISSIONS.indexOf(m));
               return (
-                <button key={m.id} disabled={!open} onClick={() => go({ n: "call", m })} className="absolute -translate-x-1/2 -translate-y-1/2 text-center" style={{ left: `${m.x}%`, top: `${m.y}%` }} aria-label={m.title}>
+                <button key={m.id} disabled={!open} onClick={() => startMission(m)} className="absolute -translate-x-1/2 -translate-y-1/2 text-center" style={{ left: `${m.x}%`, top: `${m.y}%` }} aria-label={m.title}>
                   <div className={`flex h-20 w-20 items-center justify-center rounded-full border-4 border-card text-4xl shadow-lg ${open && !p.stars[m.id] ? "animate-pulse-big" : ""}`} style={{ background: open ? heroById(m.hero).color : "var(--muted)" }}>{open ? m.icon : "🔒"}</div>
                   {p.stars[m.id] ? <Stars n={p.stars[m.id]} size={16} /> : null}
                 </button>
               );
             })}
           </div>
+          {!isChapterUnlocked(p, 1) && <p className="shrink-0 py-2 text-center font-display font-bold">🌿 Conclua as 5 missões da cidade para abrir a aventura na natureza!</p>}
         </div>
       );
       break;
@@ -152,10 +176,12 @@ export function Game() {
       break;
     case "play": {
       const G = GAMES[s.m.game];
-      body = <div className="min-h-0 flex-1 px-3 pb-3"><G hero={s.h} onDone={(mist) => { const stars = starsFor(mist); const r = applyResult(p, s.m.id, stars); update(r.next); audio.sfx("win"); audio.speak("Missão cumprida! Você conseguiu!"); setS({ n: "win", m: s.m, h: s.h, stars, earned: r.earned }); }} /></div>;
+      body = <div className="min-h-0 flex-1 px-3 pb-3"><G key={s.m.id} hero={s.h} onDone={(mist) => { const stars = starsFor(mist); const r = applyResult(p, s.m.id, stars); update(r.next); audio.sfx("win"); audio.speak("Missão cumprida! Você conseguiu!"); setS({ n: "win", m: s.m, h: s.h, stars, earned: r.earned }); }} /></div>;
       break;
     }
-    case "win":
+    case "win": {
+      const nextIndex = MISSIONS.findIndex((mission) => mission.id === s.m.id) + 1;
+      const next = MISSIONS[nextIndex];
       body = (
         <Centered>
           <Confetti />
@@ -168,13 +194,15 @@ export function Game() {
                 <div key={id} className="animate-pop flex flex-col items-center"><div className="flex h-16 w-16 items-center justify-center rounded-full text-3xl" style={{ background: md.color }}>{md.icon}</div><span className="text-xs font-bold">{md.name}</span></div>); })}
             </div>
           )}
-          <div className="relative z-50 flex gap-3">
+          <div className="relative z-50 flex max-w-full flex-wrap justify-center gap-3">
             <button onClick={() => go({ n: "play", m: s.m, h: s.h })} className="btn-game px-6 py-4 text-2xl" style={btn("var(--turquoise)")}>🔁</button>
             <button onClick={() => go({ n: "map" })} className="btn-game px-10 py-4 text-2xl" style={btn("var(--rose)")}>🗺️ Mapa</button>
+            {next && isUnlocked(p, nextIndex) && <button onClick={() => startMission(next)} className="btn-game w-full px-6 py-4 text-2xl" style={btn("var(--mint)")}>Próxima missão ➡️</button>}
           </div>
         </Centered>
       );
       break;
+    }
   }
 
   return <div className="game-app flex h-dvh min-h-0 flex-col overflow-hidden bg-sky-grad">{top}{body}</div>;

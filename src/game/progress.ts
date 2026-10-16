@@ -14,9 +14,23 @@ export function starsFor(mistakes: number) {
 }
 export const totalStars = (p: Progress) => Object.values(p.stars).reduce((a, b) => a + b, 0);
 
-/** As duas primeiras missões começam abertas; cada missão concluída abre a próxima. */
+/** O capítulo seguinte abre quando todas as missões do anterior foram concluídas. */
+export function isChapterUnlocked(p: Progress, index: number) {
+  if (!CHAPTERS[index]) return false;
+  return index === 0 || CHAPTERS[index - 1]!.missions.every((id) => (p.stars[id] ?? 0) > 0);
+}
+
+/** Mantém as missões já jogadas e a abertura gentil das duas primeiras. */
 export function isUnlocked(p: Progress, index: number) {
-  return index < 2 || (p.stars[MISSIONS[index - 1]?.id] ?? 0) > 0;
+  const mission = MISSIONS[index];
+  if (!mission) return false;
+  if ((p.stars[mission.id] ?? 0) > 0) return true;
+  const chapterIndex = CHAPTERS.findIndex((c) => c.missions.includes(mission.id));
+  const chapter = CHAPTERS[chapterIndex];
+  if (!chapter || !isChapterUnlocked(p, chapterIndex)) return false;
+  const position = chapter.missions.indexOf(mission.id);
+  if (position === 0 || (chapterIndex === 0 && position === 1)) return true;
+  return (p.stars[chapter.missions[position - 1]!] ?? 0) > 0;
 }
 
 export function applyResult(p: Progress, missionId: string, stars: number) {
