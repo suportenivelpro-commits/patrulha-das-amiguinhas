@@ -40,6 +40,10 @@ export function applyResult(p: Progress, missionId: string, stars: number) {
   give(`m-${missionId}`);
   give("primeira");
   if (totalStars(next) >= 10) give("estrelas10");
+  if (totalStars(next) >= 30) give("estrelas30");
+  if (totalStars(next) >= 75) give("estrelas75");
+  if (totalStars(next) >= 150) give("estrelas150");
+  if (MISSIONS.every((mission) => (next.stars[mission.id] ?? 0) > 0)) give("cinquenta");
   if (MISSIONS.every((m) => next.stars[m.id] === 3)) give("perfeita");
   for (const c of CHAPTERS) if (c.missions.every((id) => (next.stars[id] ?? 0) > 0)) give(c.medal);
   return { next, earned };

@@ -1,7 +1,9 @@
+import { CHALLENGE_CHAPTERS, CHALLENGE_LEVELS } from "./challenge-levels";
+
 // Conteúdo do jogo: adicione personagens, missões, medalhas e capítulos aqui.
 export type HeroId = "luna" | "mel" | "bella" | "lili" | "nina";
 export type VehicleKind = "patrol" | "airplane" | "firetruck" | "ambulance" | "bulldozer";
-export type GameKind = "kitten" | "fire" | "vet" | "bridge" | "park" | "garden" | "river" | "memory";
+export type GameKind = "kitten" | "fire" | "vet" | "bridge" | "park" | "garden" | "river" | "memory" | "challenge";
 
 export interface Hero {
   id: HeroId;
@@ -37,6 +39,7 @@ export interface Mission {
   call: string;
   hero: HeroId;
   game: GameKind;
+  challengeId?: string;
   x: number; // posição no mapa (%)
   y: number;
 }
@@ -47,9 +50,21 @@ export const MISSIONS: Mission[] = [
   { id: "bichinho", title: "Coelhinho Dodói", place: "Fazenda Girassol", icon: "🌻", caller: "🐰", call: "O coelhinho Fofo não está bem. Alguém pode cuidar dele?", hero: "lili", game: "vet", x: 80, y: 70 },
   { id: "ponte", title: "Ponte Quebrada", place: "Rio Cristal", icon: "🌉", caller: "🦆", call: "Quá quá! A ponte quebrou e ninguém consegue passar!", hero: "nina", game: "bridge", x: 48, y: 76 },
   { id: "parque", title: "Parque Bagunçado", place: "Parque Arco-Íris", icon: "🎠", caller: "🧒", call: "O vento bagunçou o parque todinho! Vamos arrumar?", hero: "luna", game: "park", x: 16, y: 70 },
-  { id: "jardim", title: "Jardim com Sede", place: "Jardim das Borboletas", icon: "🌷", caller: "🦋", call: "As flores estão com sede! Vamos regar cada plantinha para o jardim voltar a florescer?", hero: "bella", game: "garden", x: 24, y: 28 },
-  { id: "patinhos", title: "Patinhos no Rio", place: "Lagoa dos Patinhos", icon: "🦆", caller: "🦆", call: "Meus patinhos ficaram na água! Leve um de cada vez para o avião de resgate!", hero: "mel", game: "river", x: 76, y: 46 },
-  { id: "memoria", title: "Encontro dos Bichinhos", place: "Bosque dos Amigos", icon: "🐾", caller: "🦊", call: "Os bichinhos querem encontrar seus pares! Quem consegue lembrar onde cada amigo está?", hero: "luna", game: "memory", x: 34, y: 76 },
+  { id: "jardim", title: "Jardim com Sede", place: "Jardim das Borboletas", icon: "🌷", caller: "🦋", call: "As flores estão com sede! Vamos regar cada plantinha para o jardim voltar a florescer?", hero: "bella", game: "garden", x: 22, y: 30 },
+  { id: "patinhos", title: "Patinhos no Rio", place: "Lagoa dos Patinhos", icon: "🦆", caller: "🦆", call: "Meus patinhos ficaram na água! Leve um de cada vez para o avião de resgate!", hero: "mel", game: "river", x: 76, y: 26 },
+  { id: "memoria", title: "Encontro dos Bichinhos", place: "Bosque dos Amigos", icon: "🐾", caller: "🦊", call: "Os bichinhos querem encontrar seus pares! Quem consegue lembrar onde cada amigo está?", hero: "luna", game: "memory", x: 80, y: 70 },
+  ...CHALLENGE_LEVELS.map((level, index): Mission => {
+    const spots = [{ x: 22, y: 30 }, { x: 76, y: 26 }, { x: 80, y: 70 }, { x: 48, y: 76 }, { x: 16, y: 70 }];
+    const spot = spots[(index + 3) % spots.length]!;
+    return { id: level.id, title: level.title, place: level.place, icon: level.icon, caller: level.caller, call: level.call, hero: level.hero, game: "challenge", challengeId: level.id, ...spot };
+  }),
+];
+
+export interface Chapter { id: string; title: string; missions: string[]; medal: string; icon?: string; decorations?: string[] }
+export const CHAPTERS: Chapter[] = [
+  { id: "cap1", title: "Um Dia na Cidade Arco-Íris", icon: "🏙️", missions: ["gatinho", "fogo", "bichinho", "ponte", "parque"], medal: "cap1" },
+  { id: "cap2", title: "Aventura na Natureza", icon: "🌿", missions: ["jardim", "patinhos", "memoria", ...CHALLENGE_LEVELS.filter((level) => level.chapterId === "cap2").map((level) => level.id)], medal: "cap2" },
+  ...CHALLENGE_CHAPTERS,
 ];
 
 export interface Medal { id: string; icon: string; name: string; color: string }
@@ -57,14 +72,10 @@ export const MEDALS: Medal[] = [
   ...MISSIONS.map((m) => ({ id: `m-${m.id}`, icon: m.icon, name: m.title, color: heroById(m.hero).color })),
   { id: "primeira", icon: "🎀", name: "Primeira Missão", color: "var(--rose)" },
   { id: "estrelas10", icon: "🌟", name: "10 Estrelas", color: "var(--sun)" },
+  { id: "estrelas30", icon: "✨", name: "30 Estrelas", color: "var(--mint)" },
+  { id: "estrelas75", icon: "💫", name: "75 Estrelas", color: "var(--turquoise)" },
+  { id: "estrelas150", icon: "🌠", name: "150 Estrelas", color: "var(--sun)" },
   { id: "perfeita", icon: "👑", name: "Tudo Perfeito", color: "var(--lilac)" },
-  { id: "cap1", icon: "🏅", name: "Heroínas da Cidade", color: "var(--turquoise)" },
-  { id: "cap2", icon: "🌿", name: "Guardiãs da Natureza", color: "var(--mint)" },
-];
-
-// Modo história: capítulos ligam missões e dão uma medalha especial.
-export interface Chapter { id: string; title: string; missions: string[]; medal: string }
-export const CHAPTERS: Chapter[] = [
-  { id: "cap1", title: "Um Dia na Cidade Arco-Íris", missions: ["gatinho", "fogo", "bichinho", "ponte", "parque"], medal: "cap1" },
-  { id: "cap2", title: "Aventura na Natureza", missions: ["jardim", "patinhos", "memoria"], medal: "cap2" },
+  { id: "cinquenta", icon: "🏆", name: "50 Missões Cumpridas", color: "var(--sun)" },
+  ...CHAPTERS.map((chapter, index) => ({ id: chapter.medal, icon: chapter.icon ?? "🏅", name: chapter.id === "cap1" ? "Heroínas da Cidade" : chapter.id === "cap2" ? "Guardiãs da Natureza" : chapter.title, color: HEROES[index % HEROES.length]!.color })),
 ];

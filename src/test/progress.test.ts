@@ -48,7 +48,10 @@ describe("novos capítulos", () => {
     p = applyResult(p, "patinhos", 3).next;
     expect(isUnlocked(p, 7)).toBe(true);
     expect(p.medals).not.toContain("cap2");
-    const result = applyResult(p, "memoria", 3);
+    p = applyResult(p, "memoria", 3).next;
+    expect(p.medals).not.toContain("cap2");
+    p = applyResult(p, "borboletas", 3).next;
+    const result = applyResult(p, "abelhinhas", 3);
     expect(result.earned).toContain("cap2");
     expect(result.next.stars.gatinho).toBe(2);
   });
@@ -68,5 +71,34 @@ describe("reinício do jogo", () => {
     expect(isChapterUnlocked(fresh, 1)).toBe(false);
     expect(localStorage.getItem("patrulha-voz-v1")).toBe("voz-feminina");
     expect(localStorage.getItem("outro-app")).toBe("preservado");
+  });
+});
+
+
+describe("campanha de 50 missões", () => {
+  it("permite avançar até a missão50 e conquistar os dez capítulos", () => {
+    let p = emptyProgress();
+    for (const [index, mission] of MISSIONS.entries()) {
+      expect(isUnlocked(p, index)).toBe(true);
+      p = applyResult(p, mission.id, 3).next;
+    }
+    expect(Object.keys(p.stars)).toHaveLength(50);
+    expect(CHAPTERS.every((chapter) => p.medals.includes(chapter.medal))).toBe(true);
+    expect(p.medals).toContain("cinquenta");
+    expect(p.medals).toContain("perfeita");
+    expect(p.medals).toContain("estrelas150");
+  });
+  it("preserva as oito missões antigas e abre os novos desafios da natureza", () => {
+    const old = { ...emptyProgress(), stars: Object.fromEntries(MISSIONS.slice(0, 8).map((mission) => [mission.id, 3])), medals: ["cap1", "cap2", "perfeita"], sound: false };
+    saveProgress(old);
+    const restored = loadProgress();
+    expect(restored).toEqual(old);
+    expect(isUnlocked(restored, 8)).toBe(true);
+    expect(isUnlocked(restored, 9)).toBe(false);
+    expect(isChapterUnlocked(restored, 2)).toBe(false);
+    const next = applyResult(restored, MISSIONS[8]!.id, 2).next;
+    expect(next.stars.gatinho).toBe(3);
+    expect(next.medals).toContain("cap2");
+    expect(next.medals).toContain("perfeita");
   });
 });

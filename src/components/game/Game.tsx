@@ -13,9 +13,10 @@ import { DriveGame } from "./minigames/DriveGame";
 import { GardenGame } from "./minigames/GardenGame";
 import { RiverGame } from "./minigames/RiverGame";
 import { MemoryGame } from "./minigames/MemoryGame";
+import { ChallengeGame } from "./minigames/ChallengeGame";
 import type { MiniGameProps } from "./minigames/types";
 
-const GAMES: Record<Mission["game"], (p: MiniGameProps) => React.ReactElement> = { kitten: KittenGame, fire: FireGame, vet: VetGame, bridge: BridgeGame, park: ParkGame, garden: GardenGame, river: RiverGame, memory: MemoryGame };
+const GAMES: Record<Mission["game"], (p: MiniGameProps) => React.ReactElement> = { kitten: KittenGame, fire: FireGame, vet: VetGame, bridge: BridgeGame, park: ParkGame, garden: GardenGame, river: RiverGame, memory: MemoryGame, challenge: ChallengeGame };
 
 type Screen =
   | { n: "title" } | { n: "hub" } | { n: "map" } | { n: "team" } | { n: "medals" } | { n: "settings" } | { n: "reset" }
@@ -29,6 +30,8 @@ export function Game() {
   const [p, setP] = useState<Progress>(emptyProgress);
   const [s, setS] = useState<Screen>({ n: "title" });
   const [chapterIndex, setChapterIndex] = useState(0);
+  const completedCount = MISSIONS.filter((mission) => (p.stars[mission.id] ?? 0) > 0).length;
+  const resumeMission = MISSIONS.find((mission, index) => isUnlocked(p, index) && (p.stars[mission.id] ?? 0) === 0);
   useEffect(() => { const l = loadProgress(); setP(l); audio.setEnabled(l.sound); }, []);
   const update = (np: Progress) => { setP(np); saveProgress(np); };
   const go = (n: Screen) => { audio.sfx("tap"); setS(n); };
@@ -84,6 +87,8 @@ export function Game() {
       body = (
         <div className="game-centered flex min-h-0 flex-1 flex-col items-center gap-5 overflow-y-auto p-4">
           <h2 className="font-display text-4xl font-extrabold">Central de Missões</h2>
+          <p className="card-game px-4 py-2 text-center font-display text-xl font-bold">{completedCount}/{MISSIONS.length} missões · {CHAPTERS.length} capítulos</p>
+          {completedCount > 0 && resumeMission && <button onClick={() => startMission(resumeMission)} className="btn-game px-5 py-3 text-2xl" style={btn("var(--rose)")}>▶ Continuar aventura</button>}
           <div className="flex flex-wrap justify-center gap-1">{HEROES.map((h) => <Puppy key={h.id} hero={h} size={72} />)}</div>
           <div className="grid w-full max-w-xl grid-cols-2 gap-4">
             <button onClick={() => go({ n: "map" })} className="btn-game py-6 text-2xl" style={btn("var(--rose)")}>🗺️<br />Mapa</button>
@@ -118,12 +123,13 @@ export function Game() {
       const doneCount = ch.missions.filter((id) => p.stars[id]).length;
       body = (
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3">
-          <div className="grid shrink-0 grid-cols-2 gap-2" aria-label="Capítulos">
-            {CHAPTERS.map((chapter, index) => (
-              <button key={chapter.id} aria-pressed={chapterIndex === index} disabled={!isChapterUnlocked(p, index)} onClick={() => { audio.sfx("tap"); setChapterIndex(index); }} className={`card-game px-2 py-3 font-display text-lg font-bold disabled:opacity-50 ${chapterIndex === index ? "ring-4 ring-sun" : ""}`}>
-                {isChapterUnlocked(p, index) ? index === 0 ? "🏙️" : "🌿" : "🔒"} Capítulo {index + 1}
-              </button>
-            ))}
+          <div className="flex shrink-0 items-center gap-2" aria-label="Capítulos">
+            <button aria-label="Capítulo anterior" disabled={chapterIndex === 0} onClick={() => { audio.sfx("tap"); setChapterIndex((index) => index - 1); }} className="btn-game h-14 w-14 shrink-0 text-2xl disabled:opacity-40">⬅️</button>
+            <label htmlFor="chapter-select" className="sr-only">Escolher capítulo</label>
+            <select id="chapter-select" value={chapterIndex} onChange={(event) => { const index = Number(event.target.value); if (isChapterUnlocked(p, index)) { audio.sfx("tap"); setChapterIndex(index); } }} className="card-game min-h-14 min-w-0 flex-1 px-2 font-display text-base font-bold">
+              {CHAPTERS.map((chapter, index) => <option key={chapter.id} value={index} disabled={!isChapterUnlocked(p, index)}>{isChapterUnlocked(p, index) ? chapter.icon ?? "📖" : "🔒"} {index + 1}. {chapter.title}</option>)}
+            </select>
+            <button aria-label="Próximo capítulo" disabled={!isChapterUnlocked(p, chapterIndex + 1)} onClick={() => { audio.sfx("tap"); setChapterIndex((index) => index + 1); }} className="btn-game h-14 w-14 shrink-0 text-2xl disabled:opacity-40">➡️</button>
           </div>
           <div className="card-game flex shrink-0 items-center gap-3 px-4 py-2">
             <span className="text-2xl">📖</span>
@@ -136,7 +142,7 @@ export function Game() {
               <path d="M0 88 Q30 80 50 90 T100 84 L100 100 L0 100Z" fill="var(--water)" />
               <path d="M22 30 Q50 45 76 26 M50 45 L80 70 M50 45 L48 76 M50 45 L16 70" stroke="#fff" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="1 3" vectorEffect="non-scaling-stroke" style={{ strokeWidth: 10 }} />
             </svg>
-            {(chapterIndex === 0 ? ["🏡", "🌷", "🏠", "🌳", "🏫", "🌼", "🏘️"] : ["🌲", "🌷", "🦋", "🌳", "🏕️", "🌼", "🌲"]).map((e, i) => <span key={i} className="absolute text-3xl" style={{ left: `${[8, 35, 60, 90, 35, 66, 88][i]}%`, top: `${[48, 22, 54, 45, 58, 84, 88][i]}%` }}>{e}</span>)}
+            {(ch.decorations ?? (chapterIndex === 0 ? ["🏡", "🌷", "🏠", "🌳", "🏫", "🌼", "🏘️"] : ["🌲", "🌷", "🦋", "🌳", "🏕️", "🌼", "🌲"])).map((e, i) => <span key={i} className="absolute text-3xl" style={{ left: `${[8, 35, 60, 90, 35, 66, 88][i]}%`, top: `${[48, 22, 54, 45, 58, 84, 88][i]}%` }}>{e}</span>)}
             <div className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 text-center"><div className="text-5xl">{chapterIndex === 0 ? "🏰" : "🏕️"}</div><div className="rounded-full bg-card px-2 font-display text-sm font-bold">Base</div></div>
             {chapterMissions.map((m) => {
               const open = isUnlocked(p, MISSIONS.indexOf(m));
@@ -148,7 +154,7 @@ export function Game() {
               );
             })}
           </div>
-          {!isChapterUnlocked(p, 1) && <p className="shrink-0 py-2 text-center font-display font-bold">🌿 Conclua as 5 missões da cidade para abrir a aventura na natureza!</p>}
+          {CHAPTERS[chapterIndex + 1] && !isChapterUnlocked(p, chapterIndex + 1) && <p className="shrink-0 py-2 text-center font-display font-bold">🔓 Conclua as missões deste capítulo para abrir {CHAPTERS[chapterIndex + 1]!.title}!</p>}
         </div>
       );
       break;
@@ -205,7 +211,7 @@ export function Game() {
       break;
     case "play": {
       const G = GAMES[s.m.game];
-      body = <div className="min-h-0 flex-1 px-3 pb-3"><G key={s.m.id} hero={s.h} onDone={(mist) => { const stars = starsFor(mist); const r = applyResult(p, s.m.id, stars); update(r.next); audio.sfx("win"); audio.speak("Missão cumprida! Você conseguiu!"); setS({ n: "win", m: s.m, h: s.h, stars, earned: r.earned }); }} /></div>;
+      body = <div className="min-h-0 flex-1 px-3 pb-3"><G key={s.m.id} mission={s.m} hero={s.h} onDone={(mist) => { const stars = starsFor(mist); const r = applyResult(p, s.m.id, stars); update(r.next); audio.sfx("win"); audio.speak("Missão cumprida! Você conseguiu!"); setS({ n: "win", m: s.m, h: s.h, stars, earned: r.earned }); }} /></div>;
       break;
     }
     case "win": {
