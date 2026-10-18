@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Game } from "@/components/game/Game";
+import { AccountGame } from "@/components/game/AccountGame";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Game,
+  component: AccountGame,
 });

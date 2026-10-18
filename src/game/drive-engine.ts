@@ -1,3 +1,4 @@
+import { notifyLocalSave, scopedKey } from "./account-storage";
 export interface RoadObject { id: number; lane: number; y: number; kind: "cone" | "star" }
 export interface DriveState { tick: number; objects: RoadObject[]; stars: number; bumps: number; done: boolean }
 export interface DriveResult { stars: number; bumps: number }
@@ -15,11 +16,12 @@ export function advanceDrive(state: DriveState, lane: number, durationTicks: num
 }
 const SCORE_KEY = "patrulha-corrida-v1";
 export function loadDriveBest(): number {
-  try { const value = Number(localStorage.getItem(SCORE_KEY)); return Number.isSafeInteger(value) && value >= 0 ? value : 0; } catch { return 0; }
+  try { const value = Number(localStorage.getItem(scopedKey(SCORE_KEY))); return Number.isSafeInteger(value) && value >= 0 ? value : 0; } catch { return 0; }
 }
 export function saveDriveBest(stars: number): number {
   const best = Math.max(loadDriveBest(), Number.isSafeInteger(stars) && stars >= 0 ? stars : 0);
-  try { localStorage.setItem(SCORE_KEY, String(best)); } catch { /* The round still works if storage is unavailable. */ }
+  try { localStorage.setItem(scopedKey(SCORE_KEY), String(best)); } catch { /* The round still works if storage is unavailable. */ }
+  notifyLocalSave();
   return best;
 }
-export function resetDriveBest() { try { localStorage.removeItem(SCORE_KEY); } catch { /* Storage may be unavailable. */ } }
+export function resetDriveBest() { try { localStorage.removeItem(scopedKey(SCORE_KEY)); } catch { /* Storage may be unavailable. */ } notifyLocalSave(); }

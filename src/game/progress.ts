@@ -1,3 +1,4 @@
+import { notifyLocalSave, scopedKey } from "./account-storage";
 import { CHAPTERS, MISSIONS } from "./data";
 
 export interface Progress {
@@ -51,12 +52,13 @@ export function applyResult(p: Progress, missionId: string, stars: number) {
 
 export function loadProgress(): Progress {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(scopedKey(STORAGE_KEY));
     return raw ? { ...emptyProgress(), ...JSON.parse(raw) } : emptyProgress();
   } catch { return emptyProgress(); }
 }
 export function saveProgress(p: Progress) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+  try { localStorage.setItem(scopedKey(STORAGE_KEY), JSON.stringify(p)); } catch { /* ignore */ }
+  notifyLocalSave();
 }
 
 /** Reset only this game's scores and medals, keeping sound and voice preferences. */

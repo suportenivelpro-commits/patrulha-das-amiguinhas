@@ -1,0 +1,3 @@
+[functions.patrulha-register]
+# Registration is unauthenticated for players; the function validates the public app key.
+verify_jwt = false

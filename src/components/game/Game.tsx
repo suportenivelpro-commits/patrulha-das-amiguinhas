@@ -1,3 +1,5 @@
+import { useAccount } from "./AccountContext";
+import { CLOUD_LOAD_EVENT } from "@/game/account-storage";
 import { GameText } from "./GameText";
 import { StarArcade } from "./StarArcade";
 import { resetDriveBest } from "@/game/drive-engine";
@@ -30,12 +32,20 @@ type Screen =
 const btn = (c: string) => ({ ["--btn" as string]: c });
 
 export function Game() {
+  const account = useAccount();
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState("");
   const [p, setP] = useState<Progress>(emptyProgress);
   const [s, setS] = useState<Screen>({ n: "title" });
   const [chapterIndex, setChapterIndex] = useState(0);
   const completedCount = MISSIONS.filter((mission) => (p.stars[mission.id] ?? 0) > 0).length;
   const resumeMission = MISSIONS.find((mission, index) => isUnlocked(p, index) && (p.stars[mission.id] ?? 0) === 0);
   useEffect(() => { const l = loadProgress(); setP(l); audio.setEnabled(l.sound); }, []);
+  useEffect(() => {
+    const refresh = () => { const progress = loadProgress(); setP(progress); audio.setEnabled(progress.sound); };
+    window.addEventListener(CLOUD_LOAD_EVENT, refresh);
+    return () => window.removeEventListener(CLOUD_LOAD_EVENT, refresh);
+  }, []);
   const update = (np: Progress) => { setP(np); saveProgress(np); };
   const go = (n: Screen) => { audio.sfx("tap"); setS(n); };
   const startMission = (mission: Mission) => {
@@ -50,7 +60,11 @@ export function Game() {
   };
   const toggleSound = () => { const on = !p.sound; audio.setEnabled(on); if (on) audio.startMusic(); update({ ...p, sound: on }); };
 
-  const restart = () => {
+  const restart = async () => {
+    if (resetting) return;
+    setResetting(true); setResetError("");
+    try {
+    if (account?.state.user) await account.reset();
     audio.stopSpeaking();
     audio.stopMusic();
     const fresh = resetProgress(p.sound);
@@ -60,6 +74,8 @@ export function Game() {
     setS({ n: "hub" });
     if (fresh.sound) audio.startMusic();
     audio.speak("Tudo pronto! Vamos começar uma nova aventura!");
+    } catch (error) { setResetError(error instanceof Error ? error.message : "Conecte-se para reiniciar o progresso da conta."); }
+    finally { setResetting(false); }
   };
 
   const top = s.n !== "title" && (
@@ -84,6 +100,7 @@ export function Game() {
             {HEROES.map((h, i) => <div key={h.id} className="animate-bob" style={{ animationDelay: `${i * 0.2}s` }}><Puppy hero={h} size={96} /></div>)}
           </div>
           <button onClick={() => { audio.startMusic(); audio.speak("Vamos jogar!"); go({ n: "hub" }); }} className="btn-game animate-pulse-big relative px-14 py-5 text-4xl" style={btn("var(--rose)")}><GameText text="▶ Jogar" /></button>
+          {account && <button onClick={account.open} className="btn-game relative px-6 py-3 text-xl" style={btn("var(--turquoise)")}>{account.state.user ? `Conta: ${account.state.user.username}` : "Entrar / Criar conta"}</button>}
         </div>
       );
       break;
@@ -93,6 +110,7 @@ export function Game() {
           <h2 className="font-display text-4xl font-extrabold">Central de Missões</h2>
           <p className="card-game px-4 py-2 text-center font-display text-xl font-bold">{completedCount}/{MISSIONS.length} missões · {CHAPTERS.length} capítulos</p>
           {completedCount > 0 && resumeMission && <button onClick={() => startMission(resumeMission)} className="btn-game px-5 py-3 text-2xl" style={btn("var(--rose)")}><GameText text="▶ Continuar aventura" /></button>}
+          {account && <div className="flex flex-col items-center gap-2"><button onClick={account.open} className="btn-game px-5 py-3 text-xl" style={btn("var(--turquoise)")}>{account.state.user ? `Conta: ${account.state.user.username}` : "Entrar / Criar conta"}</button><p role="status" className="max-w-lg text-center text-sm">{account.state.user ? account.state.status : "Sem conta: o progresso fica somente neste aparelho."}</p></div>}
           <div className="flex flex-wrap justify-center gap-1">{HEROES.map((h) => <Puppy key={h.id} hero={h} size={72} />)}</div>
           <div className="grid w-full max-w-xl grid-cols-2 gap-4">
             <button onClick={() => go({ n: "map" })} className="btn-game py-6 text-2xl" style={btn("var(--rose)")}><GameText text="🗺️" /><br />Mapa</button>
@@ -117,11 +135,12 @@ export function Game() {
           <h2 className="text-center font-display text-3xl font-extrabold">Começar tudo de novo?</h2>
           <div className="card-game max-w-lg p-5 text-center text-xl">
             <div className="mb-3 text-5xl" aria-hidden="true"><GameText text="⭐ 🏅" /></div>
-            <p>Isso apaga as estrelas, medalhas e o recorde da corrida deste aparelho e volta as missões ao começo.</p>
+            <p>{account?.state.user ? "Isso apaga as estrelas, medalhas e o recorde desta conta em todos os aparelhos e volta as missões ao começo." : "Isso apaga as estrelas, medalhas e o recorde da corrida deste aparelho e volta as missões ao começo."}</p>
             <p className="mt-3 text-lg">A voz escolhida e a opção de som serão mantidas.</p>
           </div>
-          <button onClick={restart} className="btn-game px-6 py-4 text-2xl" style={btn("var(--coral)")}>Sim, zerar progresso</button>
-          <button onClick={() => go({ n: "settings" })} className="btn-game px-6 py-4 text-2xl" style={btn("var(--turquoise)")}>Cancelar</button>
+          {resetError && <p role="alert" className="max-w-lg text-center font-bold">{resetError}</p>}
+          <button disabled={resetting} onClick={restart} className="btn-game px-6 py-4 text-2xl" style={btn("var(--coral)")}>{resetting ? "Reiniciando…" : "Sim, zerar progresso"}</button>
+          <button onClick={() => go({ n: "settings" })} className="btn-game px-6 py-4 text-2xl" style={btn("var(--turquoise)")} disabled={resetting}>Cancelar</button>
         </Centered>
       );
       break;

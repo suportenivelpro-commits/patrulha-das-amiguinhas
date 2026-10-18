@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { Game } from "./components/game/Game";
+import { AccountGame } from "./components/game/AccountGame";
 import "./styles.css";
 
-createRoot(document.getElementById("root")!).render(<Game />);
+createRoot(document.getElementById("root")!).render(<AccountGame />);
