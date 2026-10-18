@@ -1,14 +1,16 @@
+import { ILLUSTRATIONS } from "@/game/illustrations";
+import { GameText } from "./GameText";
 import type { Hero } from "@/game/data";
 
 export function Puppy({ hero, size = 120, mood = "happy", className = "" }: { hero: Hero; size?: number; mood?: "happy" | "wow" | "think"; className?: string }) {
   return (
-    <svg viewBox="0 0 120 130" width={size} height={size * 1.08} className={className} aria-label={hero.name}>
+    <svg viewBox="0 0 120 130" width={size} height={size * 1.08} className={className} role="img" aria-label={hero.name}>
       <ellipse cx="60" cy="124" rx="34" ry="5" fill="#000" opacity=".08" />
       {/* corpo + uniforme */}
       <path d="M30 128 Q30 96 60 94 Q90 96 90 128 Z" fill={hero.color} />
       <path d="M48 96 L60 110 L72 96" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
       <circle cx="60" cy="114" r="8" fill="#fff" />
-      <text x="60" y="118" fontSize="10" textAnchor="middle">{hero.badge}</text>
+      <image href={ILLUSTRATIONS[hero.badge]} x="55" y="109" width="10" height="10" />
       {/* orelhas */}
       <ellipse cx="27" cy="62" rx="12" ry="22" fill={hero.ear} transform="rotate(20 27 62)" />
       <ellipse cx="93" cy="62" rx="12" ry="22" fill={hero.ear} transform="rotate(-20 93 62)" />
@@ -19,7 +21,7 @@ export function Puppy({ hero, size = 120, mood = "happy", className = "" }: { he
       <path d="M30 50 Q32 20 60 20 Q88 20 90 50 Q60 40 30 50 Z" fill={hero.color} />
       <path d="M30 50 Q60 40 90 50 Q92 55 86 55 Q60 46 34 55 Q28 55 30 50Z" fill="#fff" opacity=".6" />
       <circle cx="60" cy="33" r="8" fill="#fff" />
-      <text x="60" y="37" fontSize="10" textAnchor="middle">{hero.badge}</text>
+      <image href={ILLUSTRATIONS[hero.badge]} x="55" y="28" width="10" height="10" />
       {/* rosto */}
       <g>
         <ellipse cx="46" cy="63" rx="6.5" ry={mood === "wow" ? 8 : 7} fill="#3a2440" />
@@ -64,7 +66,7 @@ export function Vehicle({ hero, size = 160, className = "" }: { hero: Hero; size
         <circle cx="144" cy="61" r="6" fill="var(--sun)" />
         <path d="M150 46 L150 76" stroke="#5a4567" strokeWidth="5" strokeLinecap="round" />
         <circle cx="43" cy="59" r="7" fill="#fff" stroke="none" />
-        <text x="43" y="63" fontSize="10" textAnchor="middle" stroke="none">☁️</text>
+        <image href={ILLUSTRATIONS["☁️"]} x="38" y="54" width="10" height="10" />
       </g>}
       {kind === "firetruck" && <g stroke="#fff" strokeWidth="3" strokeLinejoin="round">
         <rect x="9" y="42" width="92" height="38" rx="8" fill="#f0676d" />
@@ -105,7 +107,7 @@ export function Vehicle({ hero, size = 160, className = "" }: { hero: Hero; size
         <path d="M14 70 Q14 44 40 42 L58 20 Q62 14 72 14 L108 14 Q118 14 122 24 L130 42 Q148 44 148 66 L148 74 Q148 80 140 80 L22 80 Q14 80 14 74Z" fill={hero.color} stroke="#fff" strokeWidth="4" />
         <path d="M64 24 L104 24 Q110 24 112 30 L118 42 L56 42Z" fill="var(--sky)" stroke="#fff" strokeWidth="3" />
         <circle cx="86" cy="59" r="12" fill="#fff" />
-        <text x="86" y="64" fontSize="15" textAnchor="middle">⭐</text>
+        <image href={ILLUSTRATIONS["⭐"]} x="78" y="51" width="16" height="16" />
         <rect x="132" y="50" width="12" height="8" rx="4" fill="var(--sun)" />
         <rect x="70" y="5" width="14" height="9" rx="4" fill="var(--rose)" />
         <rect x="85" y="5" width="14" height="9" rx="4" fill="var(--turquoise)" />
@@ -127,7 +129,7 @@ export function Stars({ n, size = 36 }: { n: number; size?: number }) {
   return (
     <div className="flex justify-center gap-1">
       {[1, 2, 3].map((i) => (
-        <span key={i} style={{ fontSize: size, animationDelay: `${i * 0.2}s` }} className={i <= n ? "animate-pop" : "opacity-25 grayscale"}>⭐</span>
+        <span key={i} style={{ fontSize: size, animationDelay: `${i * 0.2}s` }} className={i <= n ? "animate-pop" : "opacity-25 grayscale"}><GameText text="⭐" /></span>
       ))}
     </div>
   );

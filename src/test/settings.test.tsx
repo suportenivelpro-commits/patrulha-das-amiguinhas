@@ -11,6 +11,7 @@ beforeEach(() => {
   localStorage.clear();
   saveProgress({ ...emptyProgress(), stars: { gatinho: 3 }, medals: ["m-gatinho"], sound: false });
   localStorage.setItem("patrulha-voz-v1", "voz-escolhida");
+  localStorage.setItem("patrulha-corrida-v1", "12");
 });
 afterEach(() => { cleanup(); });
 function openReset() {
@@ -25,6 +26,7 @@ describe("confirmação de reinício", () => {
     openReset();
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     expect(loadProgress().stars.gatinho).toBe(3);
+    expect(localStorage.getItem("patrulha-corrida-v1")).toBe("12");
     expect(loadProgress().medals).toContain("m-gatinho");
     expect(screen.getByText(/3 estrelas/)).toBeInTheDocument();
   });
@@ -34,6 +36,14 @@ describe("confirmação de reinício", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sim, zerar progresso" }));
     expect(loadProgress()).toEqual({ stars: {}, medals: [], sound: false });
     expect(localStorage.getItem("patrulha-voz-v1")).toBe("voz-escolhida");
+    expect(localStorage.getItem("patrulha-corrida-v1")).toBeNull();
     expect(screen.getByRole("heading", { name: "Central de Missões" })).toBeInTheDocument();
   });
+});
+
+it("abre a corrida pela central sem exigir progresso na campanha", () => {
+  render(<Game />);
+  fireEvent.click(screen.getByRole("button", { name: /Jogar/ }));
+  fireEvent.click(screen.getByRole("button", { name: /Corrida das Estrelinhas/ }));
+  expect(screen.getAllByRole("button", { name: /^Correr com/ })).toHaveLength(5);
 });

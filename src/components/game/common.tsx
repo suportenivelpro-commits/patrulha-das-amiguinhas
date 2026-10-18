@@ -1,3 +1,4 @@
+import { GameText } from "./GameText";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { audio } from "@/game/audio";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ export function useFeedback() {
   const node = fb ? (
     <div key={fb.n} className="pointer-events-none fixed left-1/2 top-24 z-[60] w-max max-w-[calc(100vw-1rem)] -translate-x-1/2">
       <div className="animate-pop card-game px-6 py-3 font-display text-2xl font-extrabold sm:text-3xl" style={{ color: fb.k === "good" ? "var(--plum)" : "var(--muted-foreground)" }}>
-        {fb.k === "good" ? "🎉 " : "🤗 "}{fb.t}
+        <GameText text={fb.k === "good" ? "🎉 " : "🤗 "} />{fb.t}
       </div>
     </div>
   ) : null;
@@ -33,9 +34,9 @@ export function Hint({ icon, text }: { icon: string; text: string }) {
   useEffect(() => { const id = setTimeout(() => audio.speak(text), 300); return () => clearTimeout(id); }, [text]);
   return (
     <button onClick={() => audio.speak(text)} className="game-hint card-game animate-pop mx-auto flex max-w-full shrink-0 items-center gap-3 px-4 py-3 text-left" aria-label="Ouvir instrução">
-      <span className="text-3xl">{icon}</span>
+      <span className="text-3xl"><GameText text={icon} /></span>
       <span className="font-display text-xl font-bold leading-tight sm:text-2xl">{text}</span>
-      <span className="text-xl">🔊</span>
+      <span className="text-xl"><GameText text="🔊" /></span>
     </button>
   );
 }
@@ -90,7 +91,7 @@ export function Confetti({ count = 50 }: { count?: number }) {
     <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
       {pieces.map((p, i) => (
         <span key={i} className="absolute top-0" style={{ left: `${p.left}%`, animation: `confetti ${p.dur}s ${p.delay}s linear infinite`, fontSize: p.s * 2 }}>
-          {p.star ? "⭐" : <span className="block rounded-sm" style={{ width: p.s, height: p.s * 0.6, background: p.c }} />}
+          {p.star ? <GameText text="⭐" /> : <span className="block rounded-sm" style={{ width: p.s, height: p.s * 0.6, background: p.c }} />}
         </span>
       ))}
     </div>

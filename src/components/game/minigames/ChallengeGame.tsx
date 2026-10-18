@@ -1,3 +1,4 @@
+import { GameText } from "../GameText";
 import { useEffect, useRef, useState } from "react";
 import { CHALLENGE_LEVELS } from "@/game/challenge-levels";
 import { challengeGoal, initialChallenge, orderedForLevel, reduceChallenge, searchBoard } from "@/game/challenge-engine";
@@ -7,7 +8,7 @@ import { Hint, useFeedback } from "../common";
 import type { MiniGameProps } from "./types";
 
 function Picture({ token, className = "text-4xl" }: { token: Token; className?: string }) {
-  return <span aria-hidden="true" className={className} style={{ filter: token.silhouette ? "brightness(0)" : undefined }}>{token.icon}</span>;
+  return <span aria-hidden="true" className={className} style={{ filter: token.silhouette ? "brightness(0)" : undefined }}><GameText text={token.icon} /></span>;
 }
 
 function Tile({ token, label, onClick, disabled, selected }: { token: Token; label: string; onClick: () => void; disabled?: boolean; selected?: boolean }) {
@@ -49,9 +50,9 @@ function ChallengeSession({ level, onDone }: { level: ChallengeLevel; onDone: Mi
       {node}
       <Hint icon={level.icon} text={instruction} />
       <div className="card-game flex min-h-0 flex-1 flex-col gap-3 bg-sky-grad p-3">
-        <div role="status" className="shrink-0 text-center font-display text-xl font-bold">{level.icon} {state.progress}/{challengeGoal(level)}</div>
+        <div role="status" className="shrink-0 text-center font-display text-xl font-bold"><GameText text={level.icon} /> {state.progress}/{challengeGoal(level)}</div>
         <div className="min-h-0 flex-1 overflow-y-auto px-1 pb-2">
-          {state.done ? <div className="flex h-full min-h-36 flex-col items-center justify-center gap-3 text-center"><span className="animate-bob text-7xl">🎉</span><p className="font-display text-2xl font-bold">Você conseguiu!</p></div> : <LevelBoard level={level} state={state} attempt={attempt} />}
+          {state.done ? <div className="flex h-full min-h-36 flex-col items-center justify-center gap-3 text-center"><span className="animate-bob text-7xl"><GameText text="🎉" /></span><p className="font-display text-2xl font-bold">Você conseguiu!</p></div> : <LevelBoard level={level} state={state} attempt={attempt} />}
         </div>
       </div>
     </div>
@@ -62,9 +63,9 @@ function LevelBoard({ level, state, attempt }: { level: ChallengeLevel; state: C
   switch (level.kind) {
     case "search":
       return <div className="flex h-full flex-col gap-3">
-        <div className="rounded-2xl bg-card/80 p-2 text-center font-display text-xl font-bold">Procure: {level.target.icon} {level.target.label}</div>
+        <div className="rounded-2xl bg-card/80 p-2 text-center font-display text-xl font-bold">Procure: <GameText text={level.target.icon} /> {level.target.label}</div>
         <div className="grid flex-1 grid-cols-4 gap-2">
-          {searchBoard(level).map((cell, index) => <button key={cell.cellId} aria-label={`${cell.label}, posição ${index + 1}`} disabled={state.found.includes(cell.cellId)} onClick={() => attempt({ type: "tap", id: cell.cellId })} className="flex min-h-16 min-w-0 items-center justify-center rounded-2xl border-4 border-white bg-card/70 text-4xl disabled:opacity-30">{state.found.includes(cell.cellId) ? "✅" : cell.icon}</button>)}
+          {searchBoard(level).map((cell, index) => <button key={cell.cellId} aria-label={`${cell.label}, posição ${index + 1}`} disabled={state.found.includes(cell.cellId)} onClick={() => attempt({ type: "tap", id: cell.cellId })} className="flex min-h-16 min-w-0 items-center justify-center rounded-2xl border-4 border-white bg-card/70 text-4xl disabled:opacity-30"><GameText text={state.found.includes(cell.cellId) ? "✅" : cell.icon} /></button>)}
         </div>
       </div>;
     case "sequence":
@@ -78,7 +79,7 @@ function LevelBoard({ level, state, attempt }: { level: ChallengeLevel; state: C
       const round = level.rounds[state.progress]!;
       return <div className="flex h-full flex-col gap-3">
         <h3 className="shrink-0 text-center font-display text-xl font-bold">Quantos? {round.label}</h3>
-        <div aria-label={`${round.count} ${round.label}`} className="grid flex-1 grid-cols-4 content-center gap-3 rounded-2xl bg-card/75 p-3">{Array.from({ length: round.count }, (_, index) => <span aria-hidden="true" key={index} className="text-center text-4xl">{round.icon}</span>)}</div>
+        <div aria-label={`${round.count} ${round.label}`} className="grid flex-1 grid-cols-4 content-center gap-3 rounded-2xl bg-card/75 p-3">{Array.from({ length: round.count }, (_, index) => <span aria-hidden="true" key={index} className="text-center text-4xl"><GameText text={round.icon} /></span>)}</div>
         <div className="grid shrink-0 grid-cols-3 gap-2">{round.options.map((option) => <button key={option} aria-label={`Número ${option}`} onClick={() => attempt({ type: "tap", id: String(option) })} className="btn-game min-h-16 py-3 text-3xl">{option}</button>)}</div>
       </div>;
     }
@@ -109,13 +110,13 @@ function LevelBoard({ level, state, attempt }: { level: ChallengeLevel; state: C
       const directions = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" } as const;
       return <div role="group" aria-label="Navegar no resgate" tabIndex={0} className="flex h-full flex-col gap-3" onKeyDown={(event) => { const direction = directions[event.key as keyof typeof directions]; if (direction) { event.preventDefault(); move(direction); } }}>
         <div aria-label={`Mapa do resgate. Você está na linha ${Math.floor(state.position / level.size) + 1}, coluna ${state.position % level.size + 1}.`} className="grid min-h-40 flex-1 gap-1" style={{ gridTemplateColumns: `repeat(${level.size}, minmax(0, 1fr))` }}>
-          {Array.from({ length: level.size * level.size }, (_, index) => <div key={index} aria-hidden="true" className={`flex min-h-10 items-center justify-center rounded-xl border-2 border-white text-3xl ${level.walls.includes(index) ? "bg-lilac/60" : "bg-card/85"}`}>{index === state.position ? level.player.icon : index === level.goal ? level.destination.icon : level.walls.includes(index) ? level.obstacle.icon : "·"}</div>)}
+          {Array.from({ length: level.size * level.size }, (_, index) => <div key={index} aria-hidden="true" className={`flex min-h-10 items-center justify-center rounded-xl border-2 border-white text-3xl ${level.walls.includes(index) ? "bg-lilac/60" : "bg-card/85"}`}><GameText text={index === state.position ? level.player.icon : index === level.goal ? level.destination.icon : level.walls.includes(index) ? level.obstacle.icon : "·"} /></div>)}
         </div>
         <div className="mx-auto grid w-full max-w-xs shrink-0 grid-cols-3 gap-2">
-          <span /><button aria-label="Cima" onClick={() => move("up")} className="btn-game min-h-14 text-3xl">⬆️</button><span />
-          <button aria-label="Esquerda" onClick={() => move("left")} className="btn-game min-h-14 text-3xl">⬅️</button>
-          <button aria-label="Baixo" onClick={() => move("down")} className="btn-game min-h-14 text-3xl">⬇️</button>
-          <button aria-label="Direita" onClick={() => move("right")} className="btn-game min-h-14 text-3xl">➡️</button>
+          <span /><button aria-label="Cima" onClick={() => move("up")} className="btn-game min-h-14 text-3xl"><GameText text="⬆️" /></button><span />
+          <button aria-label="Esquerda" onClick={() => move("left")} className="btn-game min-h-14 text-3xl"><GameText text="⬅️" /></button>
+          <button aria-label="Baixo" onClick={() => move("down")} className="btn-game min-h-14 text-3xl"><GameText text="⬇️" /></button>
+          <button aria-label="Direita" onClick={() => move("right")} className="btn-game min-h-14 text-3xl"><GameText text="➡️" /></button>
         </div>
       </div>;
     }

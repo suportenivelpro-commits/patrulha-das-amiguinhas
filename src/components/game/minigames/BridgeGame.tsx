@@ -1,3 +1,4 @@
+import { GameText } from "../GameText";
 import { useRef, useState } from "react";
 import { Drag, Hint, shuffle, useFeedback } from "../common";
 import { Vehicle } from "../art";
@@ -43,8 +44,8 @@ export function BridgeGame({ hero, onDone }: MiniGameProps) {
       <Hint icon="🧩" text={done ? "A ponte está pronta!" : "Encaixe cada peça no buraco igual!"} />
       <div className="card-game relative flex-1 overflow-hidden bg-sky-grad">
         <div className="absolute bottom-0 h-[45%] w-full" style={{ background: "var(--water)" }}>
-          <div className="absolute inset-x-0 top-4 text-center text-3xl tracking-[2rem] opacity-60">〰️〰️〰️</div>
-          <div className="absolute bottom-4 right-8 animate-bob text-4xl">🦆</div>
+          <div className="absolute inset-x-0 top-4 text-center text-3xl tracking-[2rem] opacity-60"><GameText text="〰️〰️〰️" /></div>
+          <div className="absolute bottom-4 right-8 animate-bob text-4xl"><GameText text="🦆" /></div>
         </div>
         <div className="absolute bottom-[25%] left-0 h-[30%] w-[14%] rounded-tr-3xl" style={{ background: "var(--grass)" }} />
         <div className="absolute bottom-[25%] right-0 h-[30%] w-[14%] rounded-tl-3xl" style={{ background: "var(--grass)" }} />

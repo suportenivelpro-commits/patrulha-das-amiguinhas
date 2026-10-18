@@ -1,3 +1,4 @@
+import { GameText } from "../GameText";
 import { useEffect, useRef, useState } from "react";
 import { Hint, shuffle, useFeedback } from "../common";
 import { audio } from "@/game/audio";
@@ -51,11 +52,11 @@ export function MemoryGame({ onDone }: MiniGameProps) {
       {node}
       <Hint icon="🐾" text={done ? "Todos os amigos encontraram seus pares!" : "Vire duas cartas e encontre os bichinhos iguais!"} />
       <div className="card-game flex min-h-0 flex-1 flex-col gap-3 bg-sky-grad p-3">
-        <div role="status" className="shrink-0 text-center font-display text-xl font-bold">🐾 Pares encontrados: {matched.length / 2}/{ANIMALS.length}</div>
+        <div role="status" className="shrink-0 text-center font-display text-xl font-bold"><GameText text="🐾 Pares encontrados: " />{matched.length / 2}/{ANIMALS.length}</div>
         <div className="grid min-h-0 flex-1 grid-cols-4 gap-2">
           {cards.map((card) => {
             const visible = open.includes(card.id) || matched.includes(card.id);
-            return <button key={card.id} onClick={() => flip(card.id)} disabled={matched.includes(card.id) || (open.length === 2 && !visible)} aria-label={`Carta ${card.id + 1}${visible ? `: ${card.animal}` : ""}`} aria-pressed={visible} className={`flex min-h-20 min-w-0 items-center justify-center rounded-2xl border-4 border-white text-4xl transition-colors ${matched.includes(card.id) ? "bg-mint" : visible ? "bg-card" : "bg-lilac"}`} style={{ background: matched.includes(card.id) ? "var(--mint)" : undefined }}>{visible ? card.animal : "🐾"}</button>;
+            return <button key={card.id} onClick={() => flip(card.id)} disabled={matched.includes(card.id) || (open.length === 2 && !visible)} aria-label={`Carta ${card.id + 1}${visible ? `: ${card.animal}` : ""}`} aria-pressed={visible} className={`flex min-h-20 min-w-0 items-center justify-center rounded-2xl border-4 border-white text-4xl transition-colors ${matched.includes(card.id) ? "bg-mint" : visible ? "bg-card" : "bg-lilac"}`} style={{ background: matched.includes(card.id) ? "var(--mint)" : undefined }}><GameText text={visible ? card.animal : "🐾"} /></button>;
           })}
         </div>
       </div>

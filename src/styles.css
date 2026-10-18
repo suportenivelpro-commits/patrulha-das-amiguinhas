@@ -163,3 +163,10 @@
   .game-app .card-game > .touch-none { min-width: 0; }
   .game-app .card-game > .touch-none > div { max-width: 100%; }
 }
+
+/* Bundle artwork instead of depending on OS emoji coverage (notably desktop). */
+.game-illustration { display: inline-block; width: 1em; height: 1em; max-width: none; vertical-align: -0.12em; object-fit: contain; flex-shrink: 0; }
+.game-app svg { flex-shrink: 0; }
+@media (min-width: 1024px) {
+  .game-app { max-width: 1200px; margin-inline: auto; }
+}
