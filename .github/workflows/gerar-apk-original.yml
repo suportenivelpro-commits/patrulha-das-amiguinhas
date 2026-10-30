@@ -1,0 +1,49 @@
+name: Gerar APK Original
+
+on:
+  push:
+    paths:
+      - '.github/workflows/android-compatibilidade.yml'
+      - '.github/workflows/gerar-apk-original.yml'
+      - 'patrulha-original-android.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk-original:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Preparar o pacote Android
+        run: unzip -q patrulha-original-android.zip -d android-original
+      - name: Preparar o jogo original para o tablet
+        run: |
+          npm install --prefix android-original/web-tools --no-package-lock --no-audit --no-fund
+          node android-original/web-tools/prepare-web.cjs "$GITHUB_WORKSPACE"
+          python3 -m pip install fonttools
+          python3 android-original/converter-fontes.py
+      - name: Conferir personagens e jogar a primeira missao
+        working-directory: android-original/web-tools
+        run: |
+          npx playwright install --with-deps chromium
+          node smoke-test.cjs
+      - name: Compilar e assinar o APK Android 4.2.2
+        run: |
+          bash android-original/baixar-ferramentas.sh
+          bash android-original/build.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Patrulha-Original-Android
+          path: android-original/dist/
+          if-no-files-found: warn
