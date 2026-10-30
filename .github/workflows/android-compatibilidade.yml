@@ -1,0 +1,56 @@
+name: Testar Android 4.2.2
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  compatibilidade:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: Verificar motor grafico para o tablet
+        run: |
+          python3 - <<'PY'
+          import io, json, urllib.request, xml.etree.ElementTree as ET, zipfile
+          from pathlib import Path
+          base = "https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview/"
+          versions = []
+          try:
+              with urllib.request.urlopen(base + "maven-metadata.xml", timeout=30) as response:
+                  metadata = ET.fromstring(response.read())
+              versions = sorted({v.text for v in metadata.findall(".//version") if v.text and v.text.startswith("68.0.")}, reverse=True)
+          except Exception as error:
+              print("Metadados:", type(error).__name__, str(error))
+          candidates = versions[:3] + ["68.0.20190705220548", "68.0.20190813150448"]
+          errors = []
+          for version in dict.fromkeys(candidates):
+              url = base + version + "/geckoview-" + version + ".aar"
+              try:
+                  print("Verificando GeckoView", version, flush=True)
+                  with urllib.request.urlopen(url, timeout=60) as response:
+                      archive = response.read()
+                  with zipfile.ZipFile(io.BytesIO(archive)) as aar:
+                      manifest = ET.fromstring(aar.read("AndroidManifest.xml"))
+                      sdk = manifest.find("uses-sdk")
+                      minimum = int(sdk.get("{http://schemas.android.com/apk/res/android}minSdkVersion", "1")) if sdk is not None else 1
+                      arm = [n for n in aar.namelist() if n.startswith("jni/armeabi-v7a/")]
+                      assert minimum <= 17, "A biblioteca exige Android mais recente."
+                      assert arm, "A biblioteca nao contem ARM de 32 bits."
+                  result = {"engine": "GeckoView", "version": version, "minSdk": minimum, "abi": "armeabi-v7a", "aar": url}
+                  Path("compatibilidade.json").write_text(json.dumps(result, indent=2))
+                  print("RESULTADO: motor disponivel para API 17 e ARM 32 bits.")
+                  print(json.dumps(result, indent=2))
+                  break
+              except Exception as error:
+                  errors.append(version + ": " + str(error))
+          else:
+              Path("compatibilidade.json").write_text(json.dumps({"status": "nao_confirmado", "erros": errors}, indent=2))
+              print("RESULTADO: ainda nao foi possivel confirmar um motor compativel.")
+              print("\n".join(errors))
+              raise SystemExit(1)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Diagnostico-Android-4.2.2
+          path: compatibilidade.json
+
